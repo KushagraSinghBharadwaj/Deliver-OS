@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>INFRA AI — Self-Healing Logistics Intelligence Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --c:0,245,255;--p:139,92,246;--g:0,255,157;--r:255,45,85;--y:255,210,0;--o:255,107,53;
+  --bg:#00000a;--neon-r:255,45,85;--neon-c:0,245,255;--neon-p:139,92,246;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:#fff;font-family:'Exo 2',sans-serif;overflow-x:hidden;cursor:default}
+.mono{font-family:'Share Tech Mono',monospace}
+.orb{font-family:'Orbitron',monospace}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:#000}::-webkit-scrollbar-thumb{background:rgba(var(--r),1,.4);border-radius:2px}
+
+/* ============ SCANLINE OVERLAY ============ */
+body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);animation:scanlines 8s linear infinite}
+@keyframes scanlines{0%{background-position:0 0}100%{background-position:0 100%}}
+
+/* ============ NAV ============ */
+#nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:rgba(0,0,8,.92);border-bottom:1px solid rgba(var(--r),.25);backdrop-filter:blur(24px)}
+.nav-back{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none;padding:6px 14px;border-radius:8px;border:1px solid rgba(var(--c),.2);transition:all .3s;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;color:rgba(var(--c),1)}
+.nav-back:hover{border-color:rgba(var(--c),.6);box-shadow:0 0 20px rgba(var(--c),.2);background:rgba(var(--c),.05)}
+.nav-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,rgb(var(--r)),rgb(var(--p)),rgb(var(--c)));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-status{display:flex;gap:14px;align-items:center}
+.status-dot{width:6px;height:6px;border-radius:50%;animation:pdot 1.5s ease-in-out infinite}
+.sr{background:rgb(var(--r));box-shadow:0 0 10px rgb(var(--r))}
+.sc{background:rgb(var(--c));box-shadow:0 0 10px rgb(var(--c))}
+.sg{background:rgb(var(--g));box-shadow:0 0 10px rgb(var(--g))}
+@keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.6)}}
+#nav-clock{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.3)}
+
+/* ============ HERO ============ */
+#hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(var(--r),.07) 0%,rgba(var(--p),.04) 40%,transparent 70%)}
+#hero-canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.hero-content{position:relative;z-index:10;text-align:center;padding:40px 20px}
+
+/* INFRA AI orb */
+.infra-core{position:relative;width:200px;height:200px;margin:0 auto 32px;display:flex;align-items:center;justify-content:center}
+.ring{position:absolute;border-radius:50%;border:1px solid;animation:spin linear infinite}
+.ir1{width:200px;height:200px;border-color:rgba(var(--r),.6);animation-duration:6s;box-shadow:0 0 30px rgba(var(--r),.3),inset 0 0 30px rgba(var(--r),.05)}
+.ir2{width:168px;height:168px;border-color:rgba(var(--p),.5);animation-duration:4.5s;animation-direction:reverse}
+.ir3{width:136px;height:136px;border-color:rgba(var(--c),.3);animation-duration:9s;border-style:dashed}
+.ir4{width:104px;height:104px;border-color:rgba(var(--r),.7);animation-duration:3s;animation-direction:reverse}
+.ir5{width:72px;height:72px;border-color:rgba(var(--g),.4);animation-duration:7s;border-style:dotted}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.infra-orb-inner{width:76px;height:76px;border-radius:50%;background:radial-gradient(circle,rgba(var(--r),.35),rgba(var(--p),.4),rgba(0,0,20,.95));border:2px solid rgba(var(--r),.9);box-shadow:0 0 50px rgba(var(--r),.7),0 0 100px rgba(var(--r),.3),0 0 200px rgba(var(--r),.1),inset 0 0 40px rgba(var(--r),.2);display:flex;align-items:center;justify-content:center;font-size:30px;animation:orb-pulse 2s ease-in-out infinite;position:relative;z-index:2}
+@keyframes orb-pulse{0%,100%{box-shadow:0 0 50px rgba(var(--r),.7),0 0 100px rgba(var(--r),.3),inset 0 0 40px rgba(var(--r),.2);transform:scale(1)}50%{box-shadow:0 0 80px rgba(var(--r),1),0 0 160px rgba(var(--r),.5),inset 0 0 60px rgba(var(--r),.3);transform:scale(1.04)}}
+
+/* status badges */
+.hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px}
+.hbadge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:8px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;animation:badge-flicker 3s ease-in-out infinite}
+.hbr{background:rgba(var(--r),.1);color:rgb(var(--r));border:1px solid rgba(var(--r),.4)}
+.hbc{background:rgba(var(--c),.08);color:rgb(var(--c));border:1px solid rgba(var(--c),.3)}
+.hbg{background:rgba(var(--g),.08);color:rgb(var(--g));border:1px solid rgba(var(--g),.3)}
+.hbp{background:rgba(var(--p),.08);color:rgb(var(--p));border:1px solid rgba(var(--p),.3)}
+@keyframes badge-flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.3}94%{opacity:1}96%{opacity:.7}97%{opacity:1}}
+
+.hero-eyebrow{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:4px;color:rgba(var(--r),.9);margin-bottom:10px;animation:glow-text 2s ease-in-out infinite alternate}
+@keyframes glow-text{from{text-shadow:0 0 10px rgba(var(--r),.4)}to{text-shadow:0 0 30px rgba(var(--r),.9),0 0 60px rgba(var(--r),.4)}}
+.hero-title{font-family:'Orbitron',monospace;font-size:clamp(40px,8vw,88px);font-weight:900;letter-spacing:8px;background:linear-gradient(135deg,rgb(var(--r)) 0%,rgb(var(--p)) 45%,rgb(var(--c)) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 40px rgba(var(--r),.5));margin-bottom:4px;line-height:1}
+.hero-sub1{font-size:clamp(11px,2vw,14px);letter-spacing:6px;color:rgba(255,255,255,.4);margin-bottom:4px;font-weight:300}
+.hero-sub2{font-size:10px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgba(var(--c),.7);margin-bottom:30px}
+
+/* live metrics row */
+.hero-metrics{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:0}
+.hm-card{padding:12px 18px;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid rgba(var(--r),.2);backdrop-filter:blur(12px);text-align:center;min-width:120px;position:relative;overflow:hidden;transition:border-color .3s}
+.hm-card:hover{border-color:rgba(var(--r),.5)}
+.hm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(var(--r),.6),transparent)}
+.hm-val{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:rgb(var(--r));line-height:1.1}
+.hm-lbl{font-size:8px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.35);letter-spacing:1px;margin-top:3px}
+
+/* emergency pulse rings */
+.emergency-ring{position:absolute;border-radius:50%;border:1px solid rgba(var(--r),.5);animation:emergency-expand 2.5s ease-out infinite;pointer-events:none}
+@keyframes emergency-expand{0%{width:200px;height:200px;opacity:.8;transform:translate(-50%,-50%)}100%{width:600px;height:600px;opacity:0;transform:translate(-50%,-50%)}}
+
+/* ============ GLOW DIVIDER ============ */
+.glow-div{height:1px;background:linear-gradient(90deg,transparent,rgba(var(--r),.5),rgba(var(--p),.4),transparent);margin:0 0 2px}
+
+/* ============ SECTION ============ */
+.section{padding:48px 24px;max-width:1240px;margin:0 auto}
+.section-tag{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgba(var(--r),.7);margin-bottom:8px}
+.section-title{font-family:'Orbitron',monospace;font-size:clamp(18px,3vw,30px);font-weight:700;margin-bottom:6px}
+.section-sub{font-size:12px;color:rgba(255,255,255,.38);margin-bottom:30px;max-width:580px;line-height:1.6}
+
+/* ============ MAP ============ */
+#map-section{padding:48px 0;background:rgba(0,0,5,.6);border-top:1px solid rgba(var(--r),.1);border-bottom:1px solid rgba(var(--r),.1)}
+#map-inner{max-width:1240px;margin:0 auto;padding:0 24px}
+#map-wrap{position:relative;border-radius:20px;overflow:hidden;border:1px solid rgba(var(--r),.3);background:#000208;box-shadow:0 0 60px rgba(var(--r),.1),0 0 120px rgba(var(--r),.05)}
+#map-canvas{width:100%;height:420px;display:block}
+.map-hud{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none}
+.map-hud-tl{position:absolute;top:14px;left:16px;display:flex;flex-direction:column;gap:6px}
+.map-hud-tr{position:absolute;top:14px;right:16px;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.map-hud-bl{position:absolute;bottom:14px;left:16px}
+.hud-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:6px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;backdrop-filter:blur(10px)}
+.hud-r{background:rgba(var(--r),.12);color:rgb(var(--r));border:1px solid rgba(var(--r),.35)}
+.hud-c{background:rgba(var(--c),.1);color:rgb(var(--c));border:1px solid rgba(var(--c),.3)}
+.hud-g{background:rgba(var(--g),.08);color:rgb(var(--g));border:1px solid rgba(var(--g),.25)}
+.map-alert-box{position:absolute;bottom:14px;right:16px;max-width:240px;display:flex;flex-direction:column;gap:4px}
+.map-alert{padding:6px 10px;border-radius:6px;font-size:9px;font-family:'Share Tech Mono',monospace;background:rgba(var(--r),.12);border:1px solid rgba(var(--r),.35);color:rgb(var(--r));animation:alert-in .4s ease;letter-spacing:.5px}
+@keyframes alert-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+.map-legend{display:flex;gap:12px;flex-wrap:wrap}
+.ml-item{display:flex;align-items:center;gap:5px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.5)}
+.ml-dot{width:8px;height:8px;border-radius:50%}
+
+/* ============ EMERGENCY PANEL ============ */
+.emergency-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.emergency-grid{grid-template-columns:1fr}}
+.emergency-card{border-radius:16px;padding:20px;background:rgba(5,0,10,.95);border:1px solid rgba(var(--r),.25);position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s}
+.emergency-card:hover{border-color:rgba(var(--r),.6);box-shadow:0 0 40px rgba(var(--r),.12)}
+.emergency-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(var(--r),.8),transparent);animation:scan-line 3s ease-in-out infinite}
+@keyframes scan-line{0%,100%{opacity:.3}50%{opacity:1}}
+.ec-header{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.ec-icon{width:36px;height:36px;border-radius:8px;background:rgba(var(--r),.1);border:1px solid rgba(var(--r),.35);display:flex;align-items:center;justify-content:center;font-size:16px}
+.ec-title{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:1px;color:#fff}
+.ec-badge{font-size:8px;font-family:'Share Tech Mono',monospace;color:rgba(var(--r),.8);letter-spacing:2px;margin-top:2px}
+.ec-status{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.ec-live{font-size:8px;font-family:'Share Tech Mono',monospace;color:rgb(var(--r));letter-spacing:2px;display:flex;align-items:center;gap:4px}
+.ec-count{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:rgb(var(--r))}
+.ec-count-lbl{font-size:8px;color:rgba(255,255,255,.3);font-family:'Share Tech Mono',monospace;letter-spacing:1px}
+.ec-log{background:rgba(0,0,0,.4);border-radius:8px;padding:10px;height:110px;overflow:hidden;font-family:'Share Tech Mono',monospace;font-size:9px;line-height:1.8;border:1px solid rgba(255,255,255,.05)}
+.ec-log-line{display:flex;gap:6px;animation:log-in .3s ease}
+@keyframes log-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.ecl-step{color:rgba(var(--r),.8);min-width:14px}
+.ecl-msg{color:rgba(255,255,255,.55)}
+.ecl-ok{color:rgb(var(--g))}
+
+/* ============ SELF-HEALING ENGINE ============ */
+.heal-wrap{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:750px){.heal-wrap{grid-template-columns:1fr}}
+.heal-main{border-radius:20px;padding:24px;background:rgba(0,3,1,.95);border:1px solid rgba(var(--g),.2);position:relative;overflow:hidden}
+.heal-main::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;background:radial-gradient(circle,rgba(var(--g),.04),transparent 70%);pointer-events:none;animation:heal-bg 4s ease-in-out infinite alternate}
+@keyframes heal-bg{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(1.4)}}
+.heal-title{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:rgb(var(--g));letter-spacing:3px;margin-bottom:4px;text-shadow:0 0 20px rgba(var(--g),.5)}
+.heal-sub{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.3);letter-spacing:2px;margin-bottom:18px}
+.heal-score{text-align:center;margin-bottom:20px}
+.heal-score-val{font-family:'Orbitron',monospace;font-size:64px;font-weight:900;color:rgb(var(--g));text-shadow:0 0 40px rgba(var(--g),.6),0 0 80px rgba(var(--g),.3);animation:score-pulse 3s ease-in-out infinite}
+@keyframes score-pulse{0%,100%{text-shadow:0 0 40px rgba(var(--g),.6),0 0 80px rgba(var(--g),.3)}50%{text-shadow:0 0 60px rgba(var(--g),.9),0 0 120px rgba(var(--g),.5)}}
+.heal-score-lbl{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--g),.6);letter-spacing:3px;margin-top:-4px}
+
+/* neural network canvas */
+#neural-canvas{width:100%;height:160px;display:block;opacity:.7}
+
+.heal-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.hm-mini{padding:10px;border-radius:8px;background:rgba(var(--g),.05);border:1px solid rgba(var(--g),.15);text-align:center}
+.hm-mini-val{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:rgb(var(--g))}
+.hm-mini-lbl{font-size:7px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.3);letter-spacing:1px;margin-top:2px}
+
+.heal-log-panel{border-radius:20px;padding:20px;background:rgba(0,0,5,.95);border:1px solid rgba(var(--p),.2);display:flex;flex-direction:column;gap:0;overflow:hidden}
+.hlp-header{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.hlp-title{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:rgb(var(--p));letter-spacing:2px}
+.hlp-live{margin-left:auto;font-size:8px;font-family:'Share Tech Mono',monospace;color:rgba(var(--p),.7);display:flex;align-items:center;gap:5px}
+#heal-log-body{flex:1;overflow:hidden;font-family:'Share Tech Mono',monospace;font-size:9px;line-height:1.9;max-height:320px}
+.hl-line{display:flex;gap:6px;margin-bottom:2px;animation:log-in .3s ease}
+.hl-arrow{color:rgba(var(--p),.8)}
+.hl-msg{color:rgba(255,255,255,.5)}
+.hl-ok{color:rgb(var(--g));font-weight:600}
+.hl-warn{color:rgb(var(--r))}
+.hl-time{color:rgba(255,255,255,.2);min-width:54px}
+
+/* ============ ANALYTICS ============ */
+.analytics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.analytics-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.analytics-grid{grid-template-columns:1fr}}
+.ana-card{border-radius:14px;padding:18px;background:rgba(3,0,12,.95);border:1px solid rgba(255,255,255,.07);position:relative;overflow:hidden;transition:transform .3s,border-color .3s}
+.ana-card:hover{transform:translateY(-3px)}
+.ana-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.ana-r::after{background:linear-gradient(90deg,transparent,rgb(var(--r)),transparent)}
+.ana-c::after{background:linear-gradient(90deg,transparent,rgb(var(--c)),transparent)}
+.ana-g::after{background:linear-gradient(90deg,transparent,rgb(var(--g)),transparent)}
+.ana-p::after{background:linear-gradient(90deg,transparent,rgb(var(--p)),transparent)}
+.ana-icon{font-size:22px;margin-bottom:10px}
+.ana-val{font-family:'Orbitron',monospace;font-size:26px;font-weight:700;margin-bottom:3px;line-height:1}
+.ana-lbl{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-bottom:8px;font-family:'Share Tech Mono',monospace}
+.ana-delta{font-size:9px;font-family:'Share Tech Mono',monospace}
+.ana-delta.up{color:rgb(var(--g))}.ana-delta.hot{color:rgb(var(--r))}
+.spark-wrap{height:32px;margin-top:6px}
+.spark{width:100%;height:100%}
+
+/* ============ LIVE TERMINAL ============ */
+#infra-terminal{border-radius:16px;background:rgba(0,0,6,.98);border:1px solid rgba(var(--r),.2);overflow:hidden;box-shadow:0 0 60px rgba(var(--r),.06)}
+.term-header{display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(var(--r),.04);border-bottom:1px solid rgba(var(--r),.12)}
+.term-dot{width:10px;height:10px;border-radius:50%}
+.term-title{font-size:10px;font-family:'Share Tech Mono',monospace;color:rgba(var(--r),.7);letter-spacing:2px;margin-left:8px}
+.term-body{padding:14px 18px;height:260px;overflow-y:auto;font-family:'Share Tech Mono',monospace;font-size:10px;line-height:2}
+.term-body::-webkit-scrollbar{width:3px}.term-body::-webkit-scrollbar-thumb{background:rgba(var(--r),.3)}
+.t-line{display:flex;gap:8px;animation:log-in .3s ease}
+.t-time{color:rgba(255,255,255,.2);min-width:72px}
+.t-src{font-weight:700}
+.t-src-infra{color:rgb(var(--r))}
+.t-src-gti{color:rgb(var(--c))}
+.t-src-cust{color:rgb(var(--p))}
+.t-src-ok{color:rgb(var(--g))}
+.t-msg{color:rgba(255,255,255,.5)}
+.cursor-blink{display:inline-block;width:6px;height:11px;background:rgb(var(--r));animation:blink .7s step-end infinite;margin-left:3px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ============ STABILITY BAR ============ */
+.stability-wrap{display:flex;flex-direction:column;gap:8px;margin-top:24px}
+.stab-row{display:flex;align-items:center;gap:12px}
+.stab-lbl{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.4);min-width:140px;letter-spacing:1px}
+.stab-bar-bg{flex:1;height:4px;border-radius:4px;background:rgba(255,255,255,.06);position:relative;overflow:hidden}
+.stab-bar-fill{height:100%;border-radius:4px;transition:width 1s ease;position:relative}
+.stab-bar-fill::after{content:'';position:absolute;top:0;right:0;bottom:0;width:20px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4));animation:bar-shine 2s ease-in-out infinite}
+@keyframes bar-shine{0%,100%{opacity:0}50%{opacity:1}}
+.stab-val{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;min-width:50px;text-align:right}
+
+/* ============ FOOTER ============ */
+#footer{border-top:1px solid rgba(var(--r),.12);padding:28px;text-align:center;background:rgba(0,0,5,.95)}
+.footer-logo{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,rgb(var(--r)),rgb(var(--p)),rgb(var(--c)));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.footer-sub{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.25);letter-spacing:2px;margin-bottom:16px}
+.footer-stats{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
+.f-stat{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.35);display:flex;align-items:center;gap:6px}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a class="nav-back" href="javascript:history.back()">← BACK TO META-AI CEO</a>
+  <div class="nav-logo orb">INFRA AI</div>
+  <div class="nav-status">
+    <div class="status-dot sr"></div>
+    <span style="font-size:9px;letter-spacing:2px;color:rgba(255,45,85,.8);font-family:'Share Tech Mono',monospace">EMERGENCY ACTIVE</span>
+    <div class="status-dot sc" style="animation-delay:.5s"></div>
+    <span style="font-size:9px;letter-spacing:2px;color:rgba(0,245,255,.7);font-family:'Share Tech Mono',monospace">GPS LOCKED</span>
+    <div class="status-dot sg" style="animation-delay:1s"></div>
+    <span style="font-size:9px;letter-spacing:2px;color:rgba(0,255,157,.7);font-family:'Share Tech Mono',monospace">SELF-HEALING</span>
+    <span id="nav-clock"></span>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <!-- emergency pulse rings centered on orb -->
+  <div style="position:absolute;top:50%;left:50%;pointer-events:none">
+    <div class="emergency-ring" style="animation-delay:0s"></div>
+    <div class="emergency-ring" style="animation-delay:.8s"></div>
+    <div class="emergency-ring" style="animation-delay:1.6s"></div>
+  </div>
+  <div class="hero-content">
+    <div class="infra-core">
+      <div class="ring ir1"></div>
+      <div class="ring ir2"></div>
+      <div class="ring ir3"></div>
+      <div class="ring ir4"></div>
+      <div class="ring ir5"></div>
+      <div class="infra-orb-inner">⚡</div>
+    </div>
+    <p class="hero-eyebrow">◈ AUTONOMOUS SELF-HEALING LOGISTICS INTELLIGENCE ENGINE</p>
+    <h1 class="hero-title">INFRA AI</h1>
+    <p class="hero-sub1">SELF-HEALER · LAYER 5</p>
+    <p class="hero-sub2" id="hero-cycle">DETECT · RESPOND · REASSIGN · HEAL · STABILIZE</p>
+    <div class="hero-badges">
+      <div class="hbadge hbr"><div class="status-dot sr"></div>LIVE</div>
+      <div class="hbadge hbc"><div class="status-dot sc"></div>MONITORING RIDERS</div>
+      <div class="hbadge hbc"><div class="status-dot sc" style="animation-delay:.3s"></div>GPS ACTIVE</div>
+      <div class="hbadge hbr"><div class="status-dot sr" style="animation-delay:.6s"></div>ANOMALY DETECTION ACTIVE</div>
+      <div class="hbadge hbg"><div class="status-dot sg" style="animation-delay:.9s"></div>EMERGENCY RESPONSE READY</div>
+      <div class="hbadge hbp"><div class="status-dot" style="background:rgb(var(--p));box-shadow:0 0 10px rgb(var(--p));animation:pdot 1.5s ease-in-out infinite 1.2s;width:6px;height:6px;border-radius:50%"></div>AUTO-HEALING NETWORK</div>
+    </div>
+    <div class="hero-metrics">
+      <div class="hm-card"><div class="hm-val" id="hm-emergencies">7</div><div class="hm-lbl">EMERGENCIES DETECTED</div></div>
+      <div class="hm-card"><div class="hm-val" id="hm-reassign" style="color:rgb(var(--c))">23/min</div><div class="hm-lbl">RIDER REASSIGNMENTS</div></div>
+      <div class="hm-card"><div class="hm-val" id="hm-prevented" style="color:rgb(var(--g))">312</div><div class="hm-lbl">DISRUPTIONS PREVENTED</div></div>
+      <div class="hm-card"><div class="hm-val" id="hm-speed" style="color:rgb(var(--p))">1.8s</div><div class="hm-lbl">AI RECOVERY SPEED</div></div>
+      <div class="hm-card"><div class="hm-val" id="hm-gps" style="color:rgb(var(--y))">847</div><div class="hm-lbl">ACTIVE GPS NODES</div></div>
+      <div class="hm-card"><div class="hm-val" id="hm-stability" style="color:rgb(var(--g))">99.97%</div><div class="hm-lbl">SYSTEM STABILITY</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-div"></div>
+
+<!-- ============ MAP ============ -->
+<div id="map-section">
+  <div id="map-inner">
+    <p class="section-tag" style="margin-bottom:8px">◈ LIVE GPS + IoT MONITORING MAP</p>
+    <h2 class="section-title" style="margin-bottom:6px">Real-Time Logistics Intelligence Network</h2>
+    <p class="section-sub">Every rider tracked. Every anomaly flagged. Every emergency auto-resolved.</p>
+    <div id="map-wrap">
+      <canvas id="map-canvas"></canvas>
+      <div class="map-hud">
+        <div class="map-hud-tl">
+          <div class="hud-badge hud-r"><div class="status-dot sr"></div>ANOMALY DETECTION ACTIVE</div>
+          <div class="hud-badge hud-c"><div class="status-dot sc"></div>GPS TRACKING · <span id="map-riders">14</span> RIDERS</div>
+          <div class="hud-badge hud-g"><div class="status-dot sg"></div>IoT SENSORS · ALL NOMINAL</div>
+        </div>
+        <div class="map-hud-tr">
+          <div id="map-alert-box" class="map-alert-box"></div>
+        </div>
+        <div class="map-hud-bl">
+          <div class="map-legend">
+            <div class="ml-item"><div class="ml-dot" style="background:rgb(var(--c))"></div>RIDER ACTIVE</div>
+            <div class="ml-item"><div class="ml-dot" style="background:rgb(var(--r))"></div>EMERGENCY</div>
+            <div class="ml-item"><div class="ml-dot" style="background:rgb(var(--y));border-radius:2px"></div>DARK STORE</div>
+            <div class="ml-item"><div class="ml-dot" style="background:rgba(var(--r),.5)"></div>BLOCKAGE</div>
+            <div class="ml-item"><div class="ml-dot" style="background:rgba(var(--g),.6)"></div>REROUTED</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- ============ EMERGENCY PANEL ============ -->
+<div class="section">
+  <p class="section-tag">◈ ACCIDENT DETECTION & EMERGENCY RESPONSE</p>
+  <h2 class="section-title">Real-Time Emergency AI System</h2>
+  <p class="section-sub">Instant accident detection. Autonomous emergency response. Zero human intervention. Zero delivery failure.</p>
+  <div class="emergency-grid">
+    <div class="emergency-card">
+      <div class="ec-header">
+        <div class="ec-icon">🚨</div>
+        <div>
+          <div class="ec-title">ACCIDENT DETECTION</div>
+          <div class="ec-badge">IMPACT · GPS · INACTIVITY</div>
+        </div>
+        <div class="ec-status">
+          <div class="ec-live"><div class="status-dot sr"></div>LIVE SCAN</div>
+          <div class="ec-count" id="ec-accidents">3</div>
+          <div class="ec-count-lbl">THIS HOUR</div>
+        </div>
+      </div>
+      <div class="ec-log" id="ec-log-accident"></div>
+    </div>
+    <div class="emergency-card">
+      <div class="ec-header">
+        <div class="ec-icon">📍</div>
+        <div>
+          <div class="ec-title">GPS ANOMALY ENGINE</div>
+          <div class="ec-badge">DEVIATION · SPEED · ROUTE</div>
+        </div>
+        <div class="ec-status">
+          <div class="ec-live"><div class="status-dot sr"></div>ACTIVE</div>
+          <div class="ec-count" id="ec-gps" style="color:rgb(var(--c))">12</div>
+          <div class="ec-count-lbl">ANOMALIES/HR</div>
+        </div>
+      </div>
+      <div class="ec-log" id="ec-log-gps"></div>
+    </div>
+    <div class="emergency-card">
+      <div class="ec-header">
+        <div class="ec-icon">🚧</div>
+        <div>
+          <div class="ec-title">ROAD BLOCKAGE DETECTOR</div>
+          <div class="ec-badge">CLOSURES · JAMS · ACCIDENTS</div>
+        </div>
+        <div class="ec-status">
+          <div class="ec-live"><div class="status-dot sr"></div>SCANNING</div>
+          <div class="ec-count" id="ec-blockage" style="color:rgb(var(--y))">5</div>
+          <div class="ec-count-lbl">ACTIVE BLOCKS</div>
+        </div>
+      </div>
+      <div class="ec-log" id="ec-log-blockage"></div>
+    </div>
+    <div class="emergency-card">
+      <div class="ec-header">
+        <div class="ec-icon">🔄</div>
+        <div>
+          <div class="ec-title">AUTO-REASSIGNMENT ENGINE</div>
+          <div class="ec-badge">INSTANT · NEAREST · OPTIMAL</div>
+        </div>
+        <div class="ec-status">
+          <div class="ec-live"><div class="status-dot sg"></div>HEALING</div>
+          <div class="ec-count" id="ec-reassign" style="color:rgb(var(--g))">47</div>
+          <div class="ec-count-lbl">REASSIGNED TODAY</div>
+        </div>
+      </div>
+      <div class="ec-log" id="ec-log-reassign"></div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- ============ SELF-HEALING ENGINE ============ -->
+<div class="section">
+  <p class="section-tag">◈ SELF-HEALING LOGISTICS ENGINE</p>
+  <h2 class="section-title">Core AI Recovery System</h2>
+  <p class="section-sub">The autonomous nervous system of the logistics network — detecting failures, generating alternate paths, redistributing riders, and restoring stability in under 2 seconds.</p>
+  <div class="heal-wrap">
+    <div class="heal-main">
+      <div class="heal-title">NETWORK STABILITY SCORE</div>
+      <div class="heal-sub">REAL-TIME AUTONOMOUS HEALTH INDEX</div>
+      <div class="heal-score">
+        <div class="heal-score-val" id="stability-score">99.97</div>
+        <div class="heal-score-lbl">% NETWORK STABILITY</div>
+      </div>
+      <canvas id="neural-canvas"></canvas>
+      <div class="heal-metrics">
+        <div class="hm-mini"><div class="hm-mini-val" id="sh-routes">23</div><div class="hm-mini-lbl">ROUTES HEALED</div></div>
+        <div class="hm-mini"><div class="hm-mini-val" id="sh-saved">₹4.2K</div><div class="hm-mini-lbl">SAVED/CYCLE</div></div>
+        <div class="hm-mini"><div class="hm-mini-val" id="sh-speed">1.8s</div><div class="hm-mini-lbl">AVG HEAL TIME</div></div>
+      </div>
+      <div class="stability-wrap" style="margin-top:20px">
+        <div class="stab-row"><span class="stab-lbl">GPS NETWORK</span><div class="stab-bar-bg"><div class="stab-bar-fill" id="bar-gps" style="width:99%;background:linear-gradient(90deg,rgb(var(--g)),rgba(var(--g),.6))"></div></div><span class="stab-val" style="color:rgb(var(--g))" id="stab-gps">99%</span></div>
+        <div class="stab-row"><span class="stab-lbl">ROUTE INTEGRITY</span><div class="stab-bar-bg"><div class="stab-bar-fill" id="bar-route" style="width:97%;background:linear-gradient(90deg,rgb(var(--c)),rgba(var(--c),.6))"></div></div><span class="stab-val" style="color:rgb(var(--c))" id="stab-route">97%</span></div>
+        <div class="stab-row"><span class="stab-lbl">RIDER COVERAGE</span><div class="stab-bar-bg"><div class="stab-bar-fill" id="bar-rider" style="width:94%;background:linear-gradient(90deg,rgb(var(--p)),rgba(var(--p),.6))"></div></div><span class="stab-val" style="color:rgb(var(--p))" id="stab-rider">94%</span></div>
+        <div class="stab-row"><span class="stab-lbl">EMERGENCY RESPONSE</span><div class="stab-bar-bg"><div class="stab-bar-fill" id="bar-emergency" style="width:100%;background:linear-gradient(90deg,rgb(var(--r)),rgba(var(--r),.6))"></div></div><span class="stab-val" style="color:rgb(var(--r))" id="stab-emergency">100%</span></div>
+        <div class="stab-row"><span class="stab-lbl">IoT SENSOR MESH</span><div class="stab-bar-bg"><div class="stab-bar-fill" id="bar-iot" style="width:98%;background:linear-gradient(90deg,rgb(var(--y)),rgba(var(--y),.6))"></div></div><span class="stab-val" style="color:rgb(var(--y))" id="stab-iot">98%</span></div>
+      </div>
+    </div>
+    <div class="heal-log-panel">
+      <div class="hlp-header">
+        <div class="hlp-title">HEALING LOG STREAM</div>
+        <div class="hlp-live"><div class="status-dot sg"></div>LIVE AUTO-RECOVERY</div>
+      </div>
+      <div id="heal-log-body"></div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- ============ INFRA TERMINAL ============ -->
+<div class="section">
+  <p class="section-tag">◈ LIVE INFRA AI COMMAND STREAM</p>
+  <h2 class="section-title">Autonomous Decision Log</h2>
+  <p class="section-sub">Every action taken by INFRA AI — streamed live. No human approved any of this.</p>
+  <div id="infra-terminal">
+    <div class="term-header">
+      <div class="term-dot" style="background:#ff5f57"></div>
+      <div class="term-dot" style="background:#ffbd2e"></div>
+      <div class="term-dot" style="background:#28c840"></div>
+      <span class="term-title">infra-ai — self_healing_engine — autonomous_ops — LAYER 5</span>
+      <div style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:8px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;background:rgba(var(--r),.1);color:rgb(var(--r));border:1px solid rgba(var(--r),.4)"><div class="status-dot sr"></div>STREAMING</div>
+    </div>
+    <div class="term-body" id="term-body"></div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- ============ ANALYTICS ============ -->
+<div class="section">
+  <p class="section-tag">◈ INFRA AI PERFORMANCE METRICS</p>
+  <h2 class="section-title">Infrastructure Intelligence Analytics</h2>
+  <p class="section-sub">Every metric tracked, optimized, and healed by the autonomous engine.</p>
+  <div class="analytics-grid">
+    <div class="ana-card ana-r"><div class="ana-icon">🚨</div><div class="ana-val" style="color:rgb(var(--r))" id="an1">7</div><div class="ana-lbl">ACTIVE EMERGENCIES</div><div class="ana-delta hot">▲ AI RESPONDING NOW</div><div class="spark-wrap"><canvas class="spark" id="sp1"></canvas></div></div>
+    <div class="ana-card ana-g"><div class="ana-icon">🔄</div><div class="ana-val" style="color:rgb(var(--g))" id="an2">47</div><div class="ana-lbl">RIDERS REASSIGNED TODAY</div><div class="ana-delta up">▲ 3 in last 5 min</div><div class="spark-wrap"><canvas class="spark" id="sp2"></canvas></div></div>
+    <div class="ana-card ana-c"><div class="ana-icon">📍</div><div class="ana-val" style="color:rgb(var(--c))" id="an3">847</div><div class="ana-lbl">ACTIVE GPS NODES</div><div class="ana-delta up">▲ 99.97% lock rate</div><div class="spark-wrap"><canvas class="spark" id="sp3"></canvas></div></div>
+    <div class="ana-card ana-p"><div class="ana-icon">🛡️</div><div class="ana-val" style="color:rgb(var(--p))" id="an4">312</div><div class="ana-lbl">DISRUPTIONS PREVENTED</div><div class="ana-delta up">▲ +14 this hour</div><div class="spark-wrap"><canvas class="spark" id="sp4"></canvas></div></div>
+    <div class="ana-card ana-g"><div class="ana-icon">⚡</div><div class="ana-val" style="color:rgb(var(--g))" id="an5">1.8s</div><div class="ana-lbl">AVG AI RECOVERY TIME</div><div class="ana-delta up">▼ −0.4s vs last hour</div><div class="spark-wrap"><canvas class="spark" id="sp5"></canvas></div></div>
+    <div class="ana-card ana-r"><div class="ana-icon">🗺️</div><div class="ana-val" style="color:rgb(var(--c))" id="an6">99.97%</div><div class="ana-lbl">SYSTEM STABILITY SCORE</div><div class="ana-delta up">◎ FULL NETWORK NOMINAL</div><div class="spark-wrap"><canvas class="spark" id="sp6"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ============ FOOTER ============ -->
+<div id="footer">
+  <div class="footer-logo">⚡ INFRA AI · SELF-HEALING ENGINE · LAYER 5</div>
+  <div class="footer-sub">AUTONOMOUS LOGISTICS INTELLIGENCE · v5.0.2 · ZERO HUMAN INTERVENTION</div>
+  <div class="footer-stats">
+    <div class="f-stat"><div class="status-dot sr"></div><span>EMERGENCIES AUTO-RESOLVED: <span id="f-resolved">0</span></span></div>
+    <div class="f-stat"><div class="status-dot sc"></div><span>GPS UPTIME: 99.97%</span></div>
+    <div class="f-stat"><div class="status-dot sg"></div><span>HEAL CYCLES TODAY: <span id="f-heals">0</span></span></div>
+    <div class="f-stat"><div class="status-dot" style="background:rgb(var(--p));box-shadow:0 0 10px rgb(var(--p));animation:pdot 1.5s ease-in-out infinite .4s;width:6px;height:6px;border-radius:50%"></div><span>HUMANS NEEDED: ZERO</span></div>
+  </div>
+</div>
+
+<script>
+// ===== CLOCK =====
+function updateClock(){const e=document.getElementById('nav-clock');if(e)e.textContent=new Date().toLocaleTimeString('en-US',{hour12:false});}
+setInterval(updateClock,1000);updateClock();
+
+// ===== HERO CANVAS =====
+(function(){
+  const cv=document.getElementById('hero-canvas'),ctx=cv.getContext('2d');
+  let W,H,pts=[];
+  function resize(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;pts=Array.from({length:80},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,r:Math.random()*1.6+.3,alpha:Math.random()*.5+.15,type:Math.random()<.15?'r':'c'}));}
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<110){const col=a.type==='r'||b.type==='r'?'255,45,85':'0,245,255';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(${col},${.1*(1-d/110)})`;ctx.lineWidth=.5;ctx.stroke();}}));
+    pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;const col=p.type==='r'?'255,45,85':'0,245,255';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(${col},${p.alpha})`;ctx.fill();});
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize);resize();draw();
+})();
+
+// ===== HERO CYCLE =====
+const cycles=['DETECT · RESPOND · REASSIGN · HEAL · STABILIZE','GPS ANOMALY · ACCIDENT DETECTION · AUTO-REROUTING','ZERO HUMAN INTERVENTION · INFINITE AUTONOMOUS HEALING','EMERGENCY RESPONSE IN 1.8s · CUSTOMER NOTIFIED INSTANTLY','SELF-HEALING LOGISTICS · AI INFRASTRUCTURE · LAYER 5'];
+let ci=0;const hc=document.getElementById('hero-cycle');
+setInterval(()=>{ci=(ci+1)%cycles.length;if(hc){hc.style.opacity='0';setTimeout(()=>{hc.textContent=cycles[ci];hc.style.opacity='1';},300);}},4500);
+hc&&(hc.style.transition='opacity .3s');
+
+// ===== HERO METRIC UPDATES =====
+let preventedCount=312,reassignCount=47;
+setInterval(()=>{
+  document.getElementById('hm-emergencies').textContent=Math.floor(5+Math.random()*4);
+  document.getElementById('hm-reassign').textContent=Math.floor(18+Math.random()*12)+'/min';
+  preventedCount+=Math.floor(Math.random()*3);
+  document.getElementById('hm-prevented').textContent=preventedCount;
+  const speeds=['1.2s','1.5s','1.8s','2.1s','0.9s'];
+  document.getElementById('hm-speed').textContent=speeds[Math.floor(Math.random()*speeds.length)];
+  document.getElementById('hm-gps').textContent=Math.floor(840+Math.random()*20);
+  document.getElementById('hm-stability').textContent=(99.9+Math.random()*.09).toFixed(2)+'%';
+  document.getElementById('stability-score').textContent=(99.9+Math.random()*.09).toFixed(2);
+},2000);
+
+// ===== MAP CANVAS =====
+(function(){
+  const cv=document.getElementById('map-canvas'),ctx=cv.getContext('2d');
+  let W,H;
+  const stores=[{x:.1,y:.2},{x:.45,y:.12},{x:.78,y:.22},{x:.88,y:.65},{x:.55,y:.75},{x:.18,y:.78},{x:.32,y:.5}];
+  const hotspots=[{x:.28,y:.38,r:.09},{x:.6,y:.45,r:.07},{x:.72,y:.28,r:.06},{x:.4,y:.7,r:.08}];
+  const blockages=[{x:.52,y:.35},{x:.3,y:.62}];
+  let riders=[];let emergencyRider=null;let emergencyTimer=0;
+  function initRiders(){riders=Array.from({length:16},(_,i)=>({x:Math.random(),y:Math.random(),vx:(Math.random()-.5)*.004,vy:(Math.random()-.5)*.004,color:['rgba(0,245,255,1)','rgba(0,255,157,1)','rgba(139,92,246,1)'][i%3],target:Math.floor(Math.random()*stores.length),pulseR:0,pulsing:false,emergency:false,rerouted:false}));}
+  function resize(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;initRiders();}
+
+  const alerts=[];
+  function addMapAlert(msg){
+    const box=document.getElementById('map-alert-box');
+    const el=document.createElement('div');el.className='map-alert';el.textContent=msg;
+    box.appendChild(el);if(box.children.length>4)box.removeChild(box.firstChild);
+    setTimeout(()=>{if(el.parentNode)el.parentNode.removeChild(el);},6000);
+  }
+
+  function draw(){
+    if(!W||!H){requestAnimationFrame(draw);return;}
+    ctx.clearRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle='rgba(0,245,255,.03)';ctx.lineWidth=1;
+    for(let i=0;i<=12;i++){ctx.beginPath();ctx.moveTo(i*W/12,0);ctx.lineTo(i*W/12,H);ctx.stroke();}
+    for(let i=0;i<=8;i++){ctx.beginPath();ctx.moveTo(0,i*H/8);ctx.lineTo(W,i*H/8);ctx.stroke();}
+    // hotspots
+    hotspots.forEach(h=>{const g=ctx.createRadialGradient(h.x*W,h.y*H,0,h.x*W,h.y*H,h.r*Math.min(W,H));g.addColorStop(0,'rgba(255,45,85,.12)');g.addColorStop(1,'rgba(255,45,85,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(h.x*W,h.y*H,h.r*Math.min(W,H),0,Math.PI*2);ctx.fill();});
+    // blockages
+    const t=Date.now()/1000;
+    blockages.forEach(b=>{ctx.fillStyle=`rgba(255,107,53,${.15+.08*Math.sin(t*3)})`;ctx.strokeStyle=`rgba(255,107,53,${.5+.3*Math.sin(t*3)})`;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(b.x*W,b.y*H,16,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='rgba(255,107,53,1)';ctx.font='bold 11px Share Tech Mono';ctx.textAlign='center';ctx.fillText('⛔',b.x*W,b.y*H+4);});
+    // routes
+    riders.forEach(r=>{const s=stores[r.target];ctx.beginPath();ctx.moveTo(r.x*W,r.y*H);ctx.lineTo(s.x*W,s.y*H);if(r.emergency)ctx.strokeStyle='rgba(255,45,85,.25)';else if(r.rerouted)ctx.strokeStyle='rgba(0,255,157,.2)';else ctx.strokeStyle=r.color.replace('1)','.12)');ctx.lineWidth=1;ctx.setLineDash([3,5]);ctx.stroke();ctx.setLineDash([]);});
+    // stores
+    stores.forEach(s=>{const x=s.x*W,y=s.y*H;ctx.strokeStyle='rgba(255,210,0,.9)';ctx.fillStyle='rgba(255,210,0,.1)';ctx.lineWidth=1.5;ctx.beginPath();ctx.rect(x-9,y-9,18,18);ctx.fill();ctx.stroke();ctx.fillStyle='rgba(255,210,0,1)';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.strokeStyle=`rgba(255,210,0,${.25+.15*Math.sin(t*1.5)})`;ctx.lineWidth=.8;ctx.beginPath();ctx.arc(x,y,18+4*Math.sin(t*1.5),0,Math.PI*2);ctx.stroke();});
+    // riders
+    riders.forEach(r=>{
+      const s=stores[r.target];r.vx+=(s.x-r.x)*.001+(Math.random()-.5)*.004;r.vy+=(s.y-r.y)*.001+(Math.random()-.5)*.004;
+      r.vx=Math.max(-.007,Math.min(.007,r.vx));r.vy=Math.max(-.007,Math.min(.007,r.vy));
+      r.x=Math.max(.02,Math.min(.98,r.x+r.vx));r.y=Math.max(.02,Math.min(.98,r.y+r.vy));
+      if(Math.abs(r.x-s.x)<.03&&Math.abs(r.y-s.y)<.03){r.target=Math.floor(Math.random()*stores.length);r.pulsing=true;r.pulseR=0;r.rerouted=Math.random()<.3;}
+      if(r.pulsing){r.pulseR+=1.2;if(r.pulseR>22)r.pulsing=false;}
+      const x=r.x*W,y=r.y*H;
+      const col=r.emergency?'255,45,85':r.rerouted?'0,255,157':'0,245,255';
+      if(r.pulsing){ctx.beginPath();ctx.arc(x,y,r.pulseR,0,Math.PI*2);ctx.strokeStyle=`rgba(${col},${Math.max(0,1-r.pulseR/22)})`;ctx.lineWidth=1;ctx.stroke();}
+      ctx.beginPath();ctx.arc(x,y,12,0,Math.PI*2);ctx.strokeStyle=`rgba(${col},.2)`;ctx.lineWidth=1;ctx.stroke();
+      ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fillStyle=`rgba(${col},1)`;ctx.fill();
+      ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+      if(r.emergency){ctx.strokeStyle=`rgba(255,45,85,${.4+.3*Math.sin(t*8)})`;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,20+5*Math.sin(t*8),0,Math.PI*2);ctx.stroke();}
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize);resize();draw();
+
+  // random emergency events
+  const mapAlerts=['⚠ Anomaly detected — Rider #R-3847','⚡ Emergency route activated — Zone 4','🔄 Nearest rider reassigned — 0.6km','📍 GPS deviation — Rider #R-2214','🚧 Road blockage — ORR rerouting'];
+  setInterval(()=>{addMapAlert(mapAlerts[Math.floor(Math.random()*mapAlerts.length)]);},3500);
+  setInterval(()=>{const r=riders[Math.floor(Math.random()*riders.length)];if(r){r.emergency=true;setTimeout(()=>{if(r)r.emergency=false;},5000);}},8000);
+})();
+
+// ===== EMERGENCY LOG PANELS =====
+const accidentLogs=[
+  ['→','Rider #R-3847 inactive for 3 min'],['→','Possible accident detected — Koramangala'],['→','Emergency protocol activated'],['→','Backup Rider #R-4102 assigned (0.8km)'],['✓','Customer notified proactively'],
+  ['→','Sudden impact — Rider #R-5512'],['→','GPS signal lost — HSR Layout'],['→','SOS mode triggered'],['→','Nearest rider dispatched in 1.2s'],['✓','Delivery rerouted — 0 delay'],
+];
+const gpsLogs=[
+  ['→','Route deviation — Rider #R-7721'],['→','Speed drop: 45km/h → 0km/h'],['→','Abnormal movement detected'],['→','Geo-fence violation — Zone 3'],['✓','Auto-correction applied'],
+  ['→','GPS anomaly — Whitefield sector'],['→','Signal spoofing attempt detected'],['→','Fallback triangulation engaged'],['✓','Position locked — 2.1s'],
+];
+const blockageLogs=[
+  ['→','Road closure — MG Road (accident)'],['→','12 riders on affected route'],['→','Alternate path generated in 400ms'],['→','All riders rerouted — 0 delay'],['✓','ETA preserved — customers updated'],
+  ['→','Traffic jam — Silk Board (critical)'],['→','Estimated delay: 28 minutes'],['→','AI reroute via HAL Airport Rd'],['✓','Delay reduced to 4 minutes'],
+];
+const reassignLogs=[
+  ['→','Rider #R-3847 unavailable'],['→','Scanning 24 nearby riders'],['→','Best match: #R-4102 (0.6km)'],['→','Assignment completed in 0.8s'],['✓','Order re-dispatched — on time'],
+  ['→','Surge detected — Indiranagar'],['→','3 riders auto-shifted to zone'],['→','Load balanced across network'],['✓','Delivery flow stabilized'],
+];
+
+function buildEmergencyLog(id,logs){
+  const container=document.getElementById(id);if(!container)return;container.innerHTML='';
+  const show=logs.slice(0,5);
+  show.forEach(([step,msg])=>{
+    const line=document.createElement('div');line.className='ec-log-line';
+    const stepEl=document.createElement('span');stepEl.className='ecl-step';stepEl.textContent=step;
+    const msgEl=document.createElement('span');msgEl.className=step==='✓'?'ecl-ok':'ecl-msg';msgEl.textContent=msg;
+    line.appendChild(stepEl);line.appendChild(msgEl);container.appendChild(line);
+  });
+}
+buildEmergencyLog('ec-log-accident',accidentLogs);
+buildEmergencyLog('ec-log-gps',gpsLogs);
+buildEmergencyLog('ec-log-blockage',blockageLogs);
+buildEmergencyLog('ec-log-reassign',reassignLogs);
+
+let logPointers={accident:0,gps:0,blockage:0,reassign:0};
+function rotateEmergencyLog(id,logs,key){
+  const container=document.getElementById(id);if(!container)return;
+  const idx=logPointers[key];const entry=logs[idx%logs.length];logPointers[key]++;
+  const existing=container.querySelectorAll('.ec-log-line');
+  if(existing.length>=5)container.removeChild(existing[0]);
+  const line=document.createElement('div');line.className='ec-log-line';
+  const stepEl=document.createElement('span');stepEl.className='ecl-step';stepEl.textContent=entry[0];
+  const msgEl=document.createElement('span');msgEl.className=entry[0]==='✓'?'ecl-ok':'ecl-msg';msgEl.textContent=entry[1];
+  line.appendChild(stepEl);line.appendChild(msgEl);container.appendChild(line);
+}
+setInterval(()=>rotateEmergencyLog('ec-log-accident',accidentLogs,'accident'),2100);
+setInterval(()=>rotateEmergencyLog('ec-log-gps',gpsLogs,'gps'),1800);
+setInterval(()=>rotateEmergencyLog('ec-log-blockage',blockageLogs,'blockage'),2400);
+setInterval(()=>rotateEmergencyLog('ec-log-reassign',reassignLogs,'reassign'),1500);
+
+// ===== NEURAL CANVAS =====
+(function(){
+  const cv=document.getElementById('neural-canvas'),ctx=cv.getContext('2d');
+  let W,H,nodes=[];
+  function resize(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;nodes=Array.from({length:20},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.8,vy:(Math.random()-.5)*.8,active:Math.random()<.6}));}
+  function draw(){
+    ctx.clearRect(0,0,W,H);const t=Date.now()/1000;
+    nodes.forEach((a,i)=>nodes.slice(i+1).forEach(b=>{const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<120&&a.active&&b.active){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(0,255,157,${.3*(1-d/120)})`;ctx.lineWidth=.8;ctx.stroke();}}));
+    nodes.forEach(n=>{n.x+=n.vx;n.y+=n.vy;if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1;if(Math.random()<.005)n.active=!n.active;if(n.active){ctx.beginPath();ctx.arc(n.x,n.y,3,0,Math.PI*2);ctx.fillStyle=`rgba(0,255,157,${.5+.3*Math.sin(t*2+n.x)})`;ctx.fill();}});
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize);resize();draw();
+})();
+
+// ===== HEAL LOG STREAM =====
+const healLogs=[
+  {arr:'→',msg:'Route failure detected — Zone 4B',cls:'hl-warn'},
+  {arr:'→',msg:'AI generating alternate path...'},
+  {arr:'→',msg:'Nearby rider #R-4102 reassigned'},
+  {arr:'✓',msg:'Delay reduced by 12 minutes',cls:'hl-ok'},
+  {arr:'◎',msg:'Logistics stability restored',cls:'hl-ok'},
+  {arr:'→',msg:'GPS anomaly — Rider #R-5512'},
+  {arr:'→',msg:'Triangulation fallback engaged'},
+  {arr:'✓',msg:'Position locked in 2.1s',cls:'hl-ok'},
+  {arr:'→',msg:'Traffic surge — Koramangala',cls:'hl-warn'},
+  {arr:'→',msg:'6 routes recalculated simultaneously'},
+  {arr:'→',msg:'Load redistributed across 3 zones'},
+  {arr:'✓',msg:'Network flow restored — 1.8s',cls:'hl-ok'},
+  {arr:'→',msg:'Rider stopped — possible emergency'},
+  {arr:'→',msg:'Auto-reassignment triggered'},
+  {arr:'→',msg:'Customer notified proactively'},
+  {arr:'✓',msg:'Delivery recovered — 0 SLA breach',cls:'hl-ok'},
+  {arr:'→',msg:'Road blockage detected — ORR'},
+  {arr:'→',msg:'12 riders impacted — rerouting'},
+  {arr:'✓',msg:'All routes healed in 3.2s',cls:'hl-ok'},
+  {arr:'◎',msg:'System stability: 99.97%',cls:'hl-ok'},
+];
+let healLogIdx=0;
+const healBody=document.getElementById('heal-log-body');
+function addHealLog(){
+  const entry=healLogs[healLogIdx%healLogs.length];healLogIdx++;
+  const time=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const line=document.createElement('div');line.className='hl-line';
+  line.innerHTML=`<span class="hl-time">[${time}]</span><span class="hl-arrow">${entry.arr}</span><span class="${entry.cls||'hl-msg'}">${entry.msg}</span>`;
+  healBody.appendChild(line);
+  if(healBody.children.length>28)healBody.removeChild(healBody.firstChild);
+  healBody.scrollTop=healBody.scrollHeight;
+}
+for(let i=0;i<12;i++)addHealLog();
+setInterval(addHealLog,1400);
+
+// ===== MAIN TERMINAL =====
+const TERM_LOGS=[
+  {src:'[INFRA AI]',cls:'t-src-infra',msgs:['→ Rider #R-3847 inactive 3min — emergency protocol activated','→ Self-healing cycle initiated across 3 zones','→ Anomaly detected: sudden GPS signal loss — Koramangala','→ Road blockage auto-detected — ORR exit 4','→ Cascading failure prevented — logistics flow maintained','→ IoT sensor mesh: 847 nodes active — all nominal','→ Network stability score: 99.97% — continuous healing active']},
+  {src:'[GTI FLEET AI]',cls:'t-src-gti',msgs:['→ Alternate route computed in 312ms — 12 riders rerouted','→ Emergency path generated — Rider #R-4102','→ Route failure resolved — delay reduced 12 min','→ Traffic fusion updated — 156 segments recalculated']},
+  {src:'[CUSTOMER AI]',cls:'t-src-cust',msgs:['→ Customer #C-4421 notified — delivery rerouted automatically','→ ETA auto-updated — customer informed proactively','→ Complaint prevented — self-healing preempted issue']},
+  {src:'[EMERGENCY OK]',cls:'t-src-ok',msgs:['✓ Rider #R-3847 reassigned in 0.8s','✓ Route healed — delivery on track','✓ GPS lock restored — 2.1s recovery','✓ Network stability restored — 1.8s resolution']},
+];
+const termBody=document.getElementById('term-body');
+function addTermLog(){
+  const src=TERM_LOGS[Math.floor(Math.random()*TERM_LOGS.length)];
+  const msg=src.msgs[Math.floor(Math.random()*src.msgs.length)];
+  const time=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const line=document.createElement('div');line.className='t-line';
+  line.innerHTML=`<span class="t-time">[${time}]</span><span class="${src.cls}">${src.src}</span><span class="t-msg"> ${msg}</span>`;
+  termBody.appendChild(line);if(termBody.children.length>50)termBody.removeChild(termBody.firstChild);termBody.scrollTop=termBody.scrollHeight;
+}
+for(let i=0;i<10;i++)addTermLog();
+setInterval(addTermLog,1100);
+const cursor=document.createElement('div');cursor.className='t-line';cursor.innerHTML='<span class="t-src-infra">▸</span><span class="cursor-blink"></span>';termBody.appendChild(cursor);
+
+// ===== SPARKLINES =====
+const sparkColors={sp1:'rgba(255,45,85,',sp2:'rgba(0,255,157,',sp3:'rgba(0,245,255,',sp4:'rgba(139,92,246,',sp5:'rgba(0,255,157,',sp6:'rgba(0,245,255,'};
+const sparkData={};
+Object.keys(sparkColors).forEach(id=>{sparkData[id]=Array.from({length:20},()=>Math.random()*40+55);});
+function drawSparks(){Object.entries(sparkColors).forEach(([id,col])=>{const cv=document.getElementById(id);if(!cv)return;const ctx=cv.getContext('2d');const W=cv.width=cv.offsetWidth||150;const H=cv.height=cv.offsetHeight||32;ctx.clearRect(0,0,W,H);const data=sparkData[id];const min=Math.min(...data),max=Math.max(...data);const step=W/(data.length-1);ctx.beginPath();data.forEach((v,i)=>{const x=i*step,y=H-(v-min)/(max-min||1)*(H*.7)-(H*.15);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.strokeStyle=col+'1)';ctx.lineWidth=1.5;ctx.stroke();ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,col+'.2)');g.addColorStop(1,col+'0)');ctx.fillStyle=g;ctx.fill();});}
+setInterval(()=>{Object.keys(sparkData).forEach(id=>{sparkData[id].shift();sparkData[id].push(Math.random()*40+55);});drawSparks();},1600);
+setTimeout(drawSparks,300);
+
+// ===== STABILITY BARS =====
+const bars=[
+  {fill:'bar-gps',val:'stab-gps',base:99},
+  {fill:'bar-route',val:'stab-route',base:97},
+  {fill:'bar-rider',val:'stab-rider',base:94},
+  {fill:'bar-emergency',val:'stab-emergency',base:100},
+  {fill:'bar-iot',val:'stab-iot',base:98},
+];
+setInterval(()=>{bars.forEach(b=>{const v=Math.max(90,Math.min(100,b.base+(Math.random()-0.5)*2));document.getElementById(b.fill).style.width=v+'%';document.getElementById(b.val).textContent=Math.round(v)+'%';});},2500);
+
+// ===== EMERGENCY COUNTERS =====
+let accidentCount=3,gpsCount=12,blockageCount=5,reassignTotal=47;
+setInterval(()=>{
+  if(Math.random()<.3)accidentCount+=1;
+  gpsCount+=Math.floor(Math.random()*2);
+  if(Math.random()<.2)blockageCount=Math.floor(3+Math.random()*5);
+  reassignTotal+=Math.floor(Math.random()*2);
+  document.getElementById('ec-accidents').textContent=accidentCount;
+  document.getElementById('ec-gps').textContent=gpsCount;
+  document.getElementById('ec-blockage').textContent=blockageCount;
+  document.getElementById('ec-reassign').textContent=reassignTotal;
+  document.getElementById('an1').textContent=Math.floor(5+Math.random()*5);
+  document.getElementById('an2').textContent=reassignTotal;
+  document.getElementById('an3').textContent=Math.floor(840+Math.random()*20);
+  document.getElementById('an4').textContent=preventedCount;
+  const spds=['1.2s','1.5s','1.8s','0.9s','2.1s'];
+  document.getElementById('an5').textContent=spds[Math.floor(Math.random()*spds.length)];
+  document.getElementById('an6').textContent=(99.9+Math.random()*.09).toFixed(2)+'%';
+},2200);
+
+// ===== FOOTER COUNTERS =====
+let resolvedCount=0,healCount=0;
+setInterval(()=>{resolvedCount+=Math.floor(Math.random()*2+1);healCount+=Math.floor(Math.random()*3+1);document.getElementById('f-resolved').textContent=resolvedCount;document.getElementById('f-heals').textContent=healCount;},1800);
+
+// self-healing metrics
+setInterval(()=>{
+  document.getElementById('sh-routes').textContent=Math.floor(20+Math.random()*8);
+  const savings=['₹3.8K','₹4.2K','₹4.6K','₹5.1K','₹3.5K'];
+  document.getElementById('sh-saved').textContent=savings[Math.floor(Math.random()*savings.length)];
+  document.getElementById('sh-speed').textContent=(1.2+Math.random()*1.2).toFixed(1)+'s';
+},3000);
+</script>
+</body>
+</html>

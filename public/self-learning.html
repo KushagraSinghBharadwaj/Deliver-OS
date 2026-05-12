@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>GTI Fleet AI — Self-Learning AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--c:0,245,255;--p:139,92,246;--g:0,255,157;--y:255,210,0;--r:255,45,85;--o:255,107,53;--bg:#00000a}
+body{background:var(--bg);color:#fff;font-family:'Exo 2',sans-serif;overflow-x:hidden;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:9999}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.6)}}
+@keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes slideup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes learn-pulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+#nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:10px 24px;background:rgba(0,0,10,.95);border-bottom:1px solid rgba(var(--p),.18);backdrop-filter:blur(20px)}
+.nav-brand{display:flex;align-items:center;gap:12px}
+.nav-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,rgb(var(--p)),rgb(var(--c)));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-sub{font-size:8px;color:rgba(var(--p),.5);font-family:'Share Tech Mono',monospace;letter-spacing:2px;margin-top:2px}
+.nav-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1.5px}
+.status-dot{width:7px;height:7px;border-radius:50%;animation:pulse-dot 1.4s ease-in-out infinite;flex-shrink:0}
+.dot-p{background:rgb(var(--p));box-shadow:0 0 8px rgb(var(--p))}
+.dot-c{background:rgb(var(--c));box-shadow:0 0 8px rgb(var(--c))}
+#nav-clock{font-size:9px;color:rgba(255,255,255,.3);font-family:'Share Tech Mono',monospace}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--p),.7);text-decoration:none;letter-spacing:1.5px;padding:4px 12px;border:1px solid rgba(var(--p),.25);border-radius:20px;transition:all .2s;background:none;cursor:pointer}
+.back-link:hover{color:rgb(var(--p));border-color:rgba(var(--p),.6);box-shadow:0 0 14px rgba(var(--p),.2)}
+#hero{position:relative;padding:40px 24px 32px;text-align:center;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(var(--p),.09) 0%,transparent 70%)}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero-inner{position:relative;z-index:2}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;padding:5px 18px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgb(var(--p));background:rgba(var(--p),.07);border:1px solid rgba(var(--p),.3);margin-bottom:14px}
+.hero-title{font-family:'Orbitron',monospace;font-size:clamp(28px,4vw,52px);font-weight:900;letter-spacing:5px;background:linear-gradient(135deg,#fff 0%,rgb(var(--p)) 50%,rgb(var(--c)) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.hero-sub{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:4px;margin-bottom:24px}
+.hero-metrics{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.h-metric{padding:12px 18px;background:rgba(255,255,255,.03);border:1px solid rgba(var(--p),.18);border-radius:12px;text-align:center;min-width:110px}
+.h-metric-val{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:rgb(var(--p))}
+.h-metric-lbl{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-top:3px}
+.glow-div{height:1px;background:linear-gradient(90deg,transparent,rgba(var(--p),.4),rgba(var(--c),.4),transparent)}
+.section{padding:28px 20px;max-width:1400px;margin:0 auto}
+.sec-tag{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgba(var(--p),.7);margin-bottom:6px}
+.sec-title{font-family:'Orbitron',monospace;font-size:clamp(15px,2.2vw,22px);font-weight:700;color:#fff;margin-bottom:4px}
+.sec-sub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:22px}
+/* LEARNING GRID */
+.learn-main{display:grid;grid-template-columns:1fr 340px;gap:16px}
+@media(max-width:1000px){.learn-main{grid-template-columns:1fr}}
+/* NEURAL MODULES */
+.neural-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:600px){.neural-grid{grid-template-columns:1fr}}
+.neural-card{background:rgba(3,2,15,.92);border:1px solid rgba(var(--p),.22);border-radius:14px;padding:16px;position:relative;overflow:hidden;animation:slideup .4s ease both}
+.neural-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--p)),transparent)}
+.nc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.nc-name{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:#fff;letter-spacing:1.5px}
+.nc-status{font-size:8px;font-family:'Share Tech Mono',monospace;padding:2px 8px;border-radius:10px;background:rgba(var(--p),.15);color:rgb(var(--p));border:1px solid rgba(var(--p),.35)}
+.learn-bar-wrap{margin-bottom:8px}
+.lb-header{display:flex;justify-content:space-between;margin-bottom:4px}
+.lb-lbl{font-size:9px;color:rgba(255,255,255,.4);font-family:'Share Tech Mono',monospace}
+.lb-val{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:rgb(var(--p))}
+.lb-track{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.lb-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,rgb(var(--p)),rgb(var(--c)));transition:width 1.5s ease}
+.nc-stats{display:flex;gap:10px;margin-top:8px}
+.nc-stat{font-size:8px;font-family:'Share Tech Mono',monospace}
+.nc-stat-lbl{color:rgba(255,255,255,.3)}
+.nc-stat-val{color:rgb(var(--c));font-weight:600}
+/* VERSION TIMELINE */
+.version-list{display:flex;flex-direction:column;gap:0}
+.ver-item{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.ver-item:last-child{border-bottom:none}
+.ver-dot-wrap{display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0}
+.ver-dot{width:10px;height:10px;border-radius:50%;border:2px solid rgb(var(--p));background:rgba(var(--p),.3);flex-shrink:0;margin-top:4px}
+.ver-line{flex:1;width:1px;background:rgba(var(--p),.15);margin-top:3px}
+.ver-content{flex:1}
+.ver-version{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:rgb(var(--p));letter-spacing:1px}
+.ver-date{font-size:8px;color:rgba(255,255,255,.3);font-family:'Share Tech Mono',monospace;margin:2px 0}
+.ver-desc{font-size:9px;color:rgba(255,255,255,.55);font-family:'Share Tech Mono',monospace;line-height:1.5}
+.ver-improvement{font-size:9px;color:rgb(var(--g));font-family:'Orbitron',monospace;margin-top:3px;font-weight:700}
+/* RIGHT */
+.right-col{display:flex;flex-direction:column;gap:14px}
+.panel-box{background:rgba(3,2,15,.9);border:1px solid rgba(var(--p),.18);border-radius:14px;padding:16px;position:relative;overflow:hidden}
+.panel-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--p)),transparent)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-card{background:rgba(255,255,255,.03);border-radius:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.06);text-align:center}
+.stat-val{font-family:'Orbitron',monospace;font-size:20px;font-weight:700}
+.stat-lbl{font-size:8px;color:rgba(255,255,255,.3);letter-spacing:1px;margin-top:3px}
+.ai-log{background:rgba(0,0,8,.9);border-radius:10px;height:240px;overflow-y:auto;padding:12px;font-family:'Share Tech Mono',monospace;font-size:10px;line-height:1.8;border:1px solid rgba(var(--p),.15)}
+.log-line{display:flex;gap:8px;animation:fadein .25s ease}
+.log-time{color:rgba(255,255,255,.2);min-width:70px;flex-shrink:0}
+.spin-icon{display:inline-block;animation:spin 2s linear infinite;margin-right:4px}
+#footer{border-top:1px solid rgba(var(--p),.1);padding:18px 24px;text-align:center;background:rgba(0,0,5,.8);margin-top:40px}
+.footer-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,rgb(var(--p)),rgb(var(--c)));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.footer-sub{font-size:8px;color:rgba(255,255,255,.2);font-family:'Share Tech Mono',monospace;letter-spacing:2px}
+</style>
+</head>
+<body>
+<nav id="nav">
+  <div class="nav-brand">
+    <span style="font-size:20px">🧠</span>
+    <div>
+      <div class="nav-title">SELF-LEARNING AI</div>
+      <div class="nav-sub">NEURAL PATTERN ENGINE — LEARNING</div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="status-pill"><div class="status-dot dot-p"></div><span style="color:rgba(139,92,246,.8)">LEARNING</span></div>
+    <div class="status-pill"><div class="status-dot dot-c" style="animation-delay:.5s"></div><span style="color:rgba(0,245,255,.7)">47M PARAMS</span></div>
+    <span id="nav-clock"></span>
+    <button class="back-link" onclick="window.location.href='GITfleet.html'">← BACK TO FLEET AI</button>
+  </div>
+</nav>
+
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+    <div class="hero-tag"><div class="status-dot dot-p"></div>NEURAL EVOLUTION · SELF-REWRITING ALGORITHM ENGINE</div>
+    <h1 class="hero-title">SELF-LEARNING AI</h1>
+    <p class="hero-sub">TRAFFIC MEMORY · RIDER PROFILING · 24H SELF-REWRITING</p>
+    <div class="hero-metrics">
+      <div class="h-metric"><div class="h-metric-val" id="hm-accuracy">98.7%</div><div class="h-metric-lbl">OPT ACCURACY</div></div>
+      <div class="h-metric"><div class="h-metric-val" style="color:rgb(var(--c))">47M</div><div class="h-metric-lbl">NEURAL PARAMS</div></div>
+      <div class="h-metric"><div class="h-metric-val" style="color:rgb(var(--g))" id="hm-patterns">12,847</div><div class="h-metric-lbl">PATTERNS LEARNED</div></div>
+      <div class="h-metric"><div class="h-metric-val" style="color:rgb(var(--y))">v3.7.2</div><div class="h-metric-lbl">CURRENT VERSION</div></div>
+    </div>
+  </div>
+</section>
+<div class="glow-div"></div>
+
+<div class="section">
+  <div class="learn-main">
+    <div>
+      <p class="sec-tag">◈ NEURAL MODULE STATUS</p>
+      <h2 class="sec-title">Active Learning Subsystems</h2>
+      <p class="sec-sub">Each subsystem continuously trains on live Bangalore delivery data.</p>
+      <div class="neural-grid" id="neural-grid"></div>
+
+      <p class="sec-tag">◈ VERSION HISTORY</p>
+      <h2 class="sec-title">Algorithm Evolution Timeline</h2>
+      <p class="sec-sub">The AI rewrites its own routing logic every 24 hours.</p>
+      <div class="version-list" id="version-list"></div>
+    </div>
+    <div class="right-col">
+      <div class="panel-box">
+        <div class="sec-tag" style="margin-bottom:12px">◈ LEARNING PULSE</div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-val" style="color:rgb(var(--p))" id="sp-cycles">4,821</div><div class="stat-lbl">TRAIN CYCLES</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:rgb(var(--c))">47M</div><div class="stat-lbl">PARAMETERS</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:rgb(var(--g))">+0.3%</div><div class="stat-lbl">LAST DELTA</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:rgb(var(--y))">18hr</div><div class="stat-lbl">NEXT REWRITE</div></div>
+        </div>
+      </div>
+      <div class="panel-box" style="text-align:center">
+        <div class="sec-tag" style="margin-bottom:12px">◈ LIVE TRAINING</div>
+        <canvas id="neural-ring" width="160" height="160" style="margin:0 auto;display:block"></canvas>
+        <div style="font-family:'Orbitron',monospace;font-size:11px;color:rgb(var(--p));margin-top:8px" id="ring-label">TRAINING EPOCH 4,821</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.4);font-family:'Share Tech Mono',monospace;margin-top:4px">47M PARAMS ACTIVE</div>
+      </div>
+      <div class="panel-box">
+        <div class="sec-tag" style="margin-bottom:10px">◈ NEURAL EVOLUTION LOG</div>
+        <div class="ai-log" id="ai-log"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="footer">
+  <div class="footer-logo">🧠 GTI FLEET AI — SELF-LEARNING MODULE</div>
+  <div class="footer-sub">AUTONOMOUS LEARNING · 24H REWRITE · 47M PARAMS · EVOLVING</div>
+</div>
+
+<script>
+function tick(){document.getElementById('nav-clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});}
+setInterval(tick,1000);tick();
+
+(function(){
+  const cv=document.getElementById('hero-canvas'),ctx=cv.getContext('2d');
+  let pts=[],W,H;
+  function init(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight||200;
+    pts=Array.from({length:40},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*1.4+.3,a:Math.random()*.35+.08}));}
+  function draw(){ctx.clearRect(0,0,W,H);
+    pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<100){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(139,92,246,${.07*(1-d/100)})`;ctx.lineWidth=.5;ctx.stroke();}}));
+    pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(139,92,246,${p.a})`;ctx.fill();});
+    requestAnimationFrame(draw);}
+  window.addEventListener('resize',init);init();draw();
+})();
+
+const MODULES=[
+  {name:'TRAFFIC PATTERN MEMORY',progress:94,dataPoints:'8.2M',accuracy:'97.1%',status:'TRAINING'},
+  {name:'RIDER PERFORMANCE MODEL',progress:88,dataPoints:'1.4M',accuracy:'94.8%',status:'ACTIVE'},
+  {name:'CITY CONGESTION ML',progress:97,dataPoints:'12.1M',accuracy:'98.4%',status:'TRAINING'},
+  {name:'DELIVERY TIMING OPT',progress:91,dataPoints:'3.8M',accuracy:'96.2%',status:'ACTIVE'},
+  {name:'ALGORITHM SELF-REWRITE',progress:78,dataPoints:'—',accuracy:'98.7%',status:'SCHEDULED'},
+  {name:'WEATHER IMPACT MODEL',progress:85,dataPoints:'2.1M',accuracy:'93.5%',status:'ACTIVE'},
+];
+const ng=document.getElementById('neural-grid');
+MODULES.forEach((m,i)=>{
+  const card=document.createElement('div');card.className='neural-card';card.style.animationDelay=(i*.08)+'s';
+  card.innerHTML=`
+    <div class="nc-top">
+      <div class="nc-name">${m.name}</div>
+      <div class="nc-status">${m.status}</div>
+    </div>
+    <div class="learn-bar-wrap">
+      <div class="lb-header"><span class="lb-lbl">LEARNING PROGRESS</span><span class="lb-val">${m.progress}%</span></div>
+      <div class="lb-track"><div class="lb-fill" style="width:${m.progress}%"></div></div>
+    </div>
+    <div class="nc-stats">
+      <div class="nc-stat"><span class="nc-stat-lbl">DATA: </span><span class="nc-stat-val">${m.dataPoints}</span></div>
+      <div class="nc-stat"><span class="nc-stat-lbl">ACCURACY: </span><span class="nc-stat-val">${m.accuracy}</span></div>
+    </div>`;
+  ng.appendChild(card);
+});
+
+const VERSIONS=[
+  {v:'v3.7.2',date:'TODAY 02:00',desc:'Traffic cluster detection improved. New hotspot model for Silk Board junction deployed.',gain:'+0.3%'},
+  {v:'v3.7.1',date:'YESTERDAY',desc:'Rider fatigue scoring model retrained on 1.2K data points. Rain friction coefficient updated.',gain:'+0.8%'},
+  {v:'v3.7.0',date:'2 DAYS AGO',desc:'Major: city behavior delta detected across 6 zones. Neural weights rebalanced — 47M parameters.',gain:'+1.8%'},
+  {v:'v3.6.9',date:'4 DAYS AGO',desc:'EV charging pattern learned. Dark store demand model updated for Koramangala zone.',gain:'+0.5%'},
+];
+const vl=document.getElementById('version-list');
+VERSIONS.forEach((v,i)=>{
+  const div=document.createElement('div');div.className='ver-item';
+  div.innerHTML=`
+    <div class="ver-dot-wrap">
+      <div class="ver-dot"></div>
+      ${i<VERSIONS.length-1?'<div class="ver-line"></div>':''}
+    </div>
+    <div class="ver-content">
+      <div class="ver-version">${v.v}</div>
+      <div class="ver-date">${v.date}</div>
+      <div class="ver-desc">${v.desc}</div>
+      <div class="ver-improvement">▲ ${v.gain} ACCURACY GAIN</div>
+    </div>`;
+  vl.appendChild(div);
+});
+
+// Neural ring
+let ringAngle=0,epoch=4821;
+function drawRing(){
+  const cv=document.getElementById('neural-ring');
+  if(!cv)return;
+  const ctx=cv.getContext('2d');
+  const cx=80,cy=80,r=60;
+  ctx.clearRect(0,0,160,160);
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='rgba(139,92,246,.1)';ctx.lineWidth=8;ctx.stroke();
+  const progress=(epoch%1000)/1000;
+  ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+progress*Math.PI*2);
+  ctx.strokeStyle='rgb(139,92,246)';ctx.lineWidth=8;ctx.lineCap='round';
+  ctx.shadowColor='rgb(139,92,246)';ctx.shadowBlur=12;ctx.stroke();ctx.shadowBlur=0;
+  // Inner ring
+  ctx.beginPath();ctx.arc(cx,cy,42,ringAngle,ringAngle+Math.PI*.7);
+  ctx.strokeStyle='rgba(0,245,255,.4)';ctx.lineWidth=3;ctx.stroke();
+  ctx.font="bold 13px 'Orbitron',monospace";ctx.fillStyle='rgb(139,92,246)';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(Math.round(progress*100)+'%',cx,cy);
+  ringAngle+=0.04;
+  document.getElementById('ring-label').textContent='TRAINING EPOCH '+epoch.toLocaleString();
+  requestAnimationFrame(drawRing);
+}
+drawRing();
+setInterval(()=>{epoch+=Math.floor(Math.random()*3+1);document.getElementById('sp-cycles').textContent=epoch.toLocaleString();},1500);
+
+const LOG_MSGS=[
+  {c:'rgba(139,92,246,1)',m:'→ New traffic cluster detected — Silk Board'},
+  {c:'rgba(0,245,255,1)',m:'→ Optimization accuracy improved to 98.7%'},
+  {c:'rgba(0,255,157,1)',m:'→ Rider R-07 pattern indexed — 94% score'},
+  {c:'rgba(255,210,0,1)',m:'→ Weekend surge model updated — KGN +34%'},
+  {c:'rgba(139,92,246,1)',m:'→ Algorithm v3.7.2 deployed — +0.3% gain'},
+  {c:'rgba(255,107,53,1)',m:'→ Rain friction model retrained — 1.2K pts'},
+  {c:'rgba(0,255,157,1)',m:'→ City behavior delta — 6 zones updated'},
+  {c:'rgba(139,92,246,1)',m:'→ Neural weights rebalanced — 47M params'},
+];
+const logEl=document.getElementById('ai-log');
+function addLog(){
+  const l=LOG_MSGS[Math.floor(Math.random()*LOG_MSGS.length)];
+  const t=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const line=document.createElement('div');line.className='log-line';
+  line.innerHTML=`<span class="log-time">[${t}]</span><span style="color:${l.c};font-weight:600">[NEURAL]</span><span style="color:rgba(255,255,255,.55)"> ${l.m}</span>`;
+  logEl.appendChild(line);
+  while(logEl.children.length>40)logEl.removeChild(logEl.firstChild);
+  logEl.scrollTop=logEl.scrollHeight;
+}
+for(let i=0;i<6;i++)addLog();
+setInterval(addLog,2200);
+
+let patterns=12847;
+setInterval(()=>{patterns+=Math.floor(Math.random()*5);document.getElementById('hm-patterns').textContent=patterns.toLocaleString();},3000);
+</script>
+</body>
+</html>

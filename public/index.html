@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Meta-AI CEO — Autonomous Delivery Intelligence System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --c:0,245,255;--p:139,92,246;--g:0,255,157;--y:255,210,0;--r:255,45,85;--o:255,107,53;
+  --bg:#00000a;--bg2:#03020f;--bg3:#060318;
+}
+body{background:var(--bg);color:#fff;font-family:'Exo 2',sans-serif;overflow-x:hidden}
+.mono{font-family:'Share Tech Mono',monospace}
+.orb{font-family:'Orbitron',monospace}
+canvas{position:absolute;top:0;left:0;pointer-events:none}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#000}::-webkit-scrollbar-thumb{background:rgba(var(--c),.4);border-radius:2px}
+#nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:rgba(0,0,10,.85);border-bottom:1px solid rgba(var(--c),.15);backdrop-filter:blur(20px)}
+.nav-logo{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;letter-spacing:3px;background:linear-gradient(90deg,rgba(var(--c),1),rgba(var(--p),1));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-status{display:flex;gap:16px;align-items:center}
+.status-dot{width:6px;height:6px;border-radius:50%;animation:pulse-dot 1.5s ease-in-out infinite}
+.pulse-c{background:rgb(var(--c));box-shadow:0 0 10px rgb(var(--c))}
+.pulse-g{background:rgb(var(--g));box-shadow:0 0 10px rgb(var(--g))}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+#hero{position:relative;height:600px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(var(--p),.08) 0%,transparent 70%)}
+#hero-canvas{width:100%;height:100%}
+.hero-content{position:relative;z-index:10;text-align:center;pointer-events:none}
+.ceo-core{position:relative;width:180px;height:180px;margin:0 auto 28px;display:flex;align-items:center;justify-content:center}
+.ring{position:absolute;border-radius:50%;border:1px solid;animation:spin linear infinite}
+.ring1{width:180px;height:180px;border-color:rgba(var(--c),.5);animation-duration:8s;box-shadow:0 0 20px rgba(var(--c),.3)}
+.ring2{width:150px;height:150px;border-color:rgba(var(--p),.4);animation-duration:6s;animation-direction:reverse}
+.ring3{width:120px;height:120px;border-color:rgba(var(--g),.3);animation-duration:10s;border-style:dashed}
+.ring4{width:90px;height:90px;border-color:rgba(var(--c),.6);animation-duration:4s;animation-direction:reverse}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.core-inner{width:72px;height:72px;border-radius:50%;background:radial-gradient(circle,rgba(var(--c),.3),rgba(var(--p),.4),rgba(0,0,40,.9));border:2px solid rgba(var(--c),.8);box-shadow:0 0 40px rgba(var(--c),.6),0 0 80px rgba(var(--p),.3),inset 0 0 30px rgba(var(--c),.15);display:flex;align-items:center;justify-content:center;font-size:28px;animation:core-breathe 3s ease-in-out infinite;position:relative;z-index:2}
+@keyframes core-breathe{0%,100%{box-shadow:0 0 40px rgba(var(--c),.6),0 0 80px rgba(var(--p),.3),inset 0 0 30px rgba(var(--c),.15)}50%{box-shadow:0 0 70px rgba(var(--c),.9),0 0 140px rgba(var(--p),.5),inset 0 0 50px rgba(var(--c),.25)}}
+.hero-tag{display:inline-block;padding:5px 16px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgba(var(--c),1);background:rgba(var(--c),.08);border:1px solid rgba(var(--c),.3);margin-bottom:14px;animation:tag-glow 2s ease-in-out infinite alternate}
+@keyframes tag-glow{from{box-shadow:0 0 5px rgba(var(--c),.2)}to{box-shadow:0 0 20px rgba(var(--c),.5)}}
+.hero-title{font-family:'Orbitron',monospace;font-size:clamp(28px,5vw,52px);font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#fff 0%,rgba(var(--c),1) 40%,rgba(var(--p),1) 80%,#fff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:title-shift 6s ease-in-out infinite alternate;margin-bottom:10px}
+@keyframes title-shift{from{filter:brightness(1)}to{filter:brightness(1.3)}}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.5);letter-spacing:4px;margin-bottom:6px;font-weight:300}
+.hero-desc{font-size:11px;color:rgba(var(--c),.8);letter-spacing:2px;font-family:'Share Tech Mono',monospace;margin-bottom:24px;transition:opacity .3s}
+.hero-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.h-stat{padding:10px 16px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(var(--c),.2);backdrop-filter:blur(10px);text-align:center;min-width:110px}
+.h-stat-val{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:rgb(var(--c))}
+.h-stat-lbl{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1px;margin-top:2px}
+.section{padding:40px 20px;max-width:1200px;margin:0 auto}
+.section-tag{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgba(var(--c),.7);margin-bottom:8px}
+.section-title{font-family:'Orbitron',monospace;font-size:clamp(18px,3vw,28px);font-weight:700;margin-bottom:6px;color:#fff}
+.section-sub{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:28px;max-width:560px}
+#hub{display:flex;flex-direction:column;align-items:center;gap:0}
+.ceo-hub-node{padding:16px 40px;border-radius:16px;background:linear-gradient(135deg,rgba(var(--c),.08),rgba(var(--p),.12));border:1px solid rgba(var(--c),.5);box-shadow:0 0 40px rgba(var(--c),.2),inset 0 1px 0 rgba(255,255,255,.08);text-align:center;position:relative;z-index:2}
+.ceo-hub-title{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;letter-spacing:3px;color:rgb(var(--c));text-shadow:0 0 20px rgba(var(--c),.8)}
+.ceo-hub-sub{font-size:10px;color:rgba(var(--c),.6);font-family:'Share Tech Mono',monospace;letter-spacing:2px;margin-top:4px}
+.live-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px}
+.lb-c{background:rgba(var(--c),.1);color:rgb(var(--c));border:1px solid rgba(var(--c),.4)}
+.lb-g{background:rgba(var(--g),.1);color:rgb(var(--g));border:1px solid rgba(var(--g),.4)}
+.lb-p{background:rgba(var(--p),.1);color:rgb(var(--p));border:1px solid rgba(var(--p),.4)}
+.hub-connector{width:2px;height:40px;background:linear-gradient(to bottom,rgba(var(--c),.8),rgba(var(--c),.2));margin:0 auto;position:relative}
+.hub-connector::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;background:rgba(var(--c),.6);animation:pulse-dot 1s ease-in-out infinite}
+.hub-branch{width:100%;height:2px;background:linear-gradient(to right,transparent,rgba(var(--c),.4),transparent);position:relative;margin:0 auto}
+.agents-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%}
+@media(max-width:700px){.agents-grid{grid-template-columns:1fr 1fr}.hero-stats{gap:10px}.h-stat{min-width:90px}}
+@media(max-width:480px){.agents-grid{grid-template-columns:1fr}}
+.agent-card{border-radius:16px;padding:18px;position:relative;overflow:hidden;cursor:pointer;transition:transform .3s,box-shadow .3s;background:rgba(3,2,15,.9);border:1px solid}
+.agent-card:hover{transform:translateY(-4px) scale(1.02)}
+.agent-launch{position:absolute;bottom:0;left:0;right:0;padding:8px;text-align:center;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;opacity:0;transition:opacity .25s;background:linear-gradient(to top,rgba(0,0,0,.7),transparent);color:currentColor}
+.agent-card:hover .agent-launch{opacity:1}
+.agent-card[onclick]{cursor:pointer}
+/* Modal */
+#ai-modal{display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(10px)}
+#ai-modal.show{display:flex;animation:fadein .2s ease}
+.modal-box{padding:32px 40px;border-radius:20px;background:#03020f;border:1px solid;text-align:center;max-width:340px;width:90%}
+.modal-title{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;letter-spacing:3px;margin-bottom:10px}
+.modal-msg{font-size:11px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.5);letter-spacing:1.5px;line-height:1.8;margin-bottom:22px}
+.modal-close{padding:8px 24px;border-radius:8px;font-size:10px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;cursor:pointer;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.2);color:#fff;transition:all .2s}
+.modal-close:hover{background:rgba(255,255,255,.1)}
+.agent-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,currentColor,transparent);opacity:.6}
+.ac-fleet{border-color:rgba(var(--c),.3);color:rgb(var(--c))}.ac-fleet:hover{box-shadow:0 0 40px rgba(var(--c),.25)}
+.ac-scale{border-color:rgba(var(--o),.3);color:rgb(var(--o))}.ac-scale:hover{box-shadow:0 0 40px rgba(var(--o),.25)}
+.ac-cust{border-color:rgba(var(--p),.3);color:rgb(var(--p))}.ac-cust:hover{box-shadow:0 0 40px rgba(var(--p),.25)}
+.ac-infra{border-color:rgba(var(--g),.3);color:rgb(var(--g))}.ac-infra:hover{box-shadow:0 0 40px rgba(var(--g),.25)}
+.ac-demand{border-color:rgba(var(--y),.3);color:rgb(var(--y))}.ac-demand:hover{box-shadow:0 0 40px rgba(var(--y),.25)}
+.ac-pay{border-color:rgba(var(--r),.3);color:rgb(var(--r))}.ac-pay:hover{box-shadow:0 0 40px rgba(var(--r),.25)}
+.agent-icon{font-size:28px;margin-bottom:10px}
+.agent-name{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:2px}
+.agent-role{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1px;opacity:.6;margin-bottom:10px}
+.agent-features{list-style:none;margin-bottom:12px}
+.agent-features li{font-size:10px;color:rgba(255,255,255,.55);margin-bottom:3px;padding-left:12px;position:relative}
+.agent-features li::before{content:'›';position:absolute;left:0;color:currentColor;opacity:.8}
+.agent-metric-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:8px;border-top:1px solid rgba(255,255,255,.06);padding-top:10px}
+.agent-metric-val{font-family:'Orbitron',monospace;font-size:20px;font-weight:700}
+.agent-metric-lbl{font-size:9px;opacity:.5;margin-top:2px}
+.mini-chart{height:36px;display:flex;align-items:flex-end;gap:2px}
+.mini-bar{width:4px;border-radius:2px;transition:height .5s ease;opacity:.8}
+#terminal{border-radius:16px;background:rgba(0,0,8,.95);border:1px solid rgba(var(--c),.25);overflow:hidden;box-shadow:0 0 60px rgba(var(--c),.08)}
+.term-header{display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(var(--c),.05);border-bottom:1px solid rgba(var(--c),.1)}
+.term-dot{width:10px;height:10px;border-radius:50%}
+.term-title{font-size:10px;font-family:'Share Tech Mono',monospace;color:rgba(var(--c),.7);letter-spacing:2px;margin-left:8px}
+.term-body{padding:16px;height:240px;overflow-y:auto;font-family:'Share Tech Mono',monospace;font-size:11px;line-height:1.9}
+.term-body::-webkit-scrollbar{width:3px}.term-body::-webkit-scrollbar-thumb{background:rgba(var(--c),.3)}
+.log-line{display:flex;gap:8px;animation:fadein .3s ease}
+@keyframes fadein{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.log-time{color:rgba(255,255,255,.25);min-width:72px}
+.log-src-ceo{color:rgb(var(--c))}.log-src-fleet{color:rgb(var(--y))}.log-src-cust{color:rgb(var(--p))}
+.log-src-infra{color:rgb(var(--g))}.log-src-scale{color:rgb(var(--o))}.log-src-demand{color:#ff9fff}.log-src-pay{color:rgb(var(--r))}
+.log-msg{color:rgba(255,255,255,.6)}
+.cursor-blink{display:inline-block;width:7px;height:12px;background:rgb(var(--c));animation:blink .8s step-end infinite;margin-left:3px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+#map-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(var(--c),.25);background:#000510}
+#city-canvas{width:100%;height:300px;display:block}
+.map-overlay{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px}
+.map-legend{display:flex;gap:10px;flex-wrap:wrap}
+.ml-item{display:flex;align-items:center;gap:5px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.6)}
+.ml-dot{width:8px;height:8px;border-radius:50%}
+.map-status{position:absolute;bottom:10px;left:12px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--c),.7)}
+.analytics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:700px){.analytics-grid{grid-template-columns:repeat(2,1fr)}}
+.ana-card{border-radius:14px;padding:16px;background:rgba(3,2,15,.9);border:1px solid rgba(255,255,255,.07);position:relative;overflow:hidden}
+.ana-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.ana-c::after{background:linear-gradient(90deg,transparent,rgb(var(--c)),transparent)}
+.ana-g::after{background:linear-gradient(90deg,transparent,rgb(var(--g)),transparent)}
+.ana-p::after{background:linear-gradient(90deg,transparent,rgb(var(--p)),transparent)}
+.ana-y::after{background:linear-gradient(90deg,transparent,rgb(var(--y)),transparent)}
+.ana-o::after{background:linear-gradient(90deg,transparent,rgb(var(--o)),transparent)}
+.ana-r::after{background:linear-gradient(90deg,transparent,rgb(var(--r)),transparent)}
+.ana-icon{font-size:20px;margin-bottom:8px}
+.ana-val{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;margin-bottom:2px}
+.ana-lbl{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1px;margin-bottom:8px}
+.ana-change{font-size:9px;font-family:'Share Tech Mono',monospace}
+.ana-change.up{color:rgb(var(--g))}
+.sparkline-wrap{height:32px;position:relative}
+.sparkline{width:100%;height:100%}
+.incident-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:600px){.incident-grid{grid-template-columns:1fr}}
+.inc-card{border-radius:14px;padding:16px;background:rgba(3,2,15,.9);border:1px solid rgba(255,45,85,.25);position:relative;overflow:hidden}
+.inc-problem{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;font-size:9px;font-family:'Share Tech Mono',monospace;background:rgba(var(--r),.1);color:rgb(var(--r));border:1px solid rgba(var(--r),.3);margin-bottom:10px}
+.inc-row{display:flex;align-items:baseline;gap:8px;margin-bottom:5px;font-size:10px}
+.inc-label{color:rgba(255,255,255,.35);min-width:70px;font-family:'Share Tech Mono',monospace}
+.inc-value{color:rgba(255,255,255,.75)}
+.inc-result{color:rgb(var(--g));font-weight:600}
+.inc-time{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--g),.6);margin-top:8px;border-top:1px solid rgba(255,255,255,.05);padding-top:8px}
+.future-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:700px){.future-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.future-grid{grid-template-columns:1fr}}
+.fut-card{border-radius:14px;padding:18px;background:rgba(5,0,20,.9);border:1px solid rgba(var(--p),.2);transition:all .3s;cursor:pointer;position:relative;overflow:hidden}
+.fut-card:hover{border-color:rgba(var(--p),.6);box-shadow:0 0 30px rgba(var(--p),.15);transform:translateY(-3px)}
+.fut-icon{font-size:32px;margin-bottom:10px}
+.fut-title{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:#fff;letter-spacing:1px;margin-bottom:6px}
+.fut-desc{font-size:10px;color:rgba(255,255,255,.45);line-height:1.6}
+.fut-badge{display:inline-block;margin-top:10px;font-size:8px;font-family:'Share Tech Mono',monospace;color:rgba(var(--p),.8);letter-spacing:2px}
+#footer{border-top:1px solid rgba(var(--c),.1);padding:24px;text-align:center;background:rgba(0,0,5,.8)}
+.footer-logo{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,rgba(var(--c),1),rgba(var(--p),1));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.footer-sub{font-size:10px;color:rgba(255,255,255,.3);font-family:'Share Tech Mono',monospace;letter-spacing:2px;margin-bottom:12px}
+.footer-stats{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
+.f-stat{font-size:10px;font-family:'Share Tech Mono',monospace;display:flex;align-items:center;gap:6px}
+.chain-wrap{display:flex;align-items:center;gap:0;overflow-x:auto;padding:12px 0}
+.block-node{min-width:80px;padding:10px;border-radius:8px;background:rgba(var(--r),.08);border:1px solid rgba(var(--r),.3);text-align:center;font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(var(--r),1);flex-shrink:0}
+.block-hash{font-size:8px;color:rgba(255,255,255,.25);margin-top:3px;word-break:break-all}
+.chain-link{width:28px;height:2px;background:linear-gradient(90deg,rgba(var(--r),.4),rgba(var(--r),.8));flex-shrink:0;position:relative}
+.chain-link::after{content:'';position:absolute;right:-3px;top:-3px;width:8px;height:8px;border-right:2px solid rgba(var(--r),.8);border-top:2px solid rgba(var(--r),.8);transform:rotate(45deg)}
+.chain-pulse{animation:chain-anim 2s ease-in-out infinite}
+@keyframes chain-anim{0%,100%{background:linear-gradient(90deg,rgba(var(--r),.4),rgba(var(--r),.8))}50%{background:linear-gradient(90deg,rgba(var(--r),.9),rgba(var(--r),.4))}}
+.glow-div{height:1px;background:linear-gradient(90deg,transparent,rgba(var(--c),.4),rgba(var(--p),.4),transparent);margin:0 0 2px}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-logo orb">META-AI CEO</div>
+  <div class="nav-status">
+    <div class="status-dot pulse-c"></div>
+    <span style="font-size:9px;letter-spacing:2px;color:rgba(0,245,255,.7);font-family:'Share Tech Mono',monospace">ALL SYSTEMS ACTIVE</span>
+    <div class="status-dot pulse-g" style="animation-delay:.5s"></div>
+    <span style="font-size:9px;letter-spacing:2px;color:rgba(0,255,157,.7);font-family:'Share Tech Mono',monospace">6 AI AGENTS ONLINE</span>
+    <span id="nav-time" style="font-size:9px;color:rgba(255,255,255,.3);font-family:'Share Tech Mono',monospace"></span>
+  </div>
+</nav>
+
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content">
+    <div class="ceo-core">
+      <div class="ring ring1"></div><div class="ring ring2"></div><div class="ring ring3"></div><div class="ring ring4"></div>
+      <div class="core-inner">🧠</div>
+    </div>
+    <div class="hero-tag">◎ AUTONOMOUS DELIVERY INTELLIGENCE SYSTEM v5.0</div>
+    <h1 class="hero-title">META-AI CEO</h1>
+    <p class="hero-sub">EVERY DECISION MADE BY AI</p>
+    <p class="hero-desc" id="hero-cycle">ZERO HUMAN INTERVENTION · AI DISPATCHES · AI PREDICTS · AI SOLVES</p>
+    <div class="hero-stats">
+      <div class="h-stat"><div class="h-stat-val">40%</div><div class="h-stat-lbl">LOWER COST</div></div>
+      <div class="h-stat"><div class="h-stat-val">500ms</div><div class="h-stat-lbl">ROUTE OPTIMIZE</div></div>
+      <div class="h-stat"><div class="h-stat-val">24/7</div><div class="h-stat-lbl">AUTONOMOUS OPS</div></div>
+      <div class="h-stat"><div class="h-stat-val">≈0</div><div class="h-stat-lbl">FAILED DELIVERIES</div></div>
+      <div class="h-stat"><div class="h-stat-val">∞</div><div class="h-stat-lbl">SELF-HEALING</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-div"></div>
+
+<div class="section">
+  <p class="section-tag">◈ AUTONOMOUS AGENT NETWORK</p>
+  <h2 class="section-title">AI Command Hierarchy</h2>
+  <p class="section-sub">One CEO Brain. Six AI Departments. Zero humans in the loop.</p>
+  <div id="hub">
+    <div class="ceo-hub-node">
+      <div style="display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap">
+        <span style="font-size:24px">🧠</span>
+        <div><div class="ceo-hub-title">META-AI CEO</div><div class="ceo-hub-sub">ORCHESTRATES ALL · DISPATCHES TASKS · AUTO-RECOVERS</div></div>
+        <div class="live-badge lb-c"><div class="status-dot pulse-c"></div>LIVE</div>
+      </div>
+    </div>
+    <div class="hub-connector"></div>
+    <div class="hub-branch"></div>
+    <div style="height:16px"></div>
+    <div class="agents-grid">
+      <div class="agent-card ac-fleet" style="color:rgb(0,245,255)" onclick="window.location.href='GITfleet.html'" title="Open GTI Fleet AI">
+        <div class="agent-icon">🛸</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="agent-name">GTI FLEET AI</div>
+          <div class="live-badge lb-c"><div class="status-dot pulse-c"></div>LIVE</div>
+        </div>
+        <div class="agent-role">ROUTE OPTIMIZER · LAYER 2</div>
+        <ul class="agent-features"><li>Routes optimized in &lt;500ms</li><li>Live traffic + GPS fusion</li><li>40% distance reduction</li><li>Dynamic real-time rerouting</li><li>Zero fatigue dispatching</li></ul>
+        <div class="agent-metric-row"><div><div class="agent-metric-val" id="fleet-val">847</div><div class="agent-metric-lbl">ROUTES/MIN</div></div><div class="mini-chart" id="chart-fleet"></div></div>
+        <div class="agent-launch">OPEN DASHBOARD →</div>
+      </div>
+      <div class="agent-card ac-scale" style="color:rgb(255,107,53)" onclick="showComingSoon('SCALE AI','rgb(255,107,53)')" title="Open Scale AI">
+        <div class="agent-icon">📈</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="agent-name">SCALE AI</div>
+          <div class="live-badge" style="background:rgba(255,107,53,.1);color:rgb(255,107,53);border:1px solid rgba(255,107,53,.4);padding:3px 10px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;display:inline-flex;align-items:center;gap:5px"><div class="status-dot" style="background:rgb(255,107,53);width:6px;height:6px;border-radius:50%;animation:pulse-dot 1.5s ease-in-out infinite"></div>LIVE</div>
+        </div>
+        <div class="agent-role">COST OPTIMIZER · LAYER 1</div>
+        <ul class="agent-features"><li>Auto-scales infrastructure</li><li>Near-zero idle costs at night</li><li>Predictive resource allocation</li><li>Elastic AI compute fabric</li><li>Real-time cost reduction</li></ul>
+        <div class="agent-metric-row"><div><div class="agent-metric-val" id="scale-val" style="color:rgb(255,107,53)">₹4.2K</div><div class="agent-metric-lbl">SAVED/HR</div></div><div class="mini-chart" id="chart-scale"></div></div>
+      </div>
+      <div class="agent-card ac-cust" style="color:rgb(139,92,246)" onclick="window.location.href='customer-ai.html'" title="Open Customer AI">
+        <div class="agent-icon">🎙️</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="agent-name">CUSTOMER AI</div>
+          <div class="live-badge lb-p"><div class="status-dot" style="background:rgb(139,92,246);width:6px;height:6px;border-radius:50%;animation:pulse-dot 1.5s ease-in-out infinite .3s"></div>LIVE</div>
+        </div>
+        <div class="agent-role">FAILURE PREVENTER · LAYER 3</div>
+        <ul class="agent-features"><li>Auto-calls before rider arrives</li><li>Detects unavailable customers</li><li>Smart retry prediction</li><li>Zero human CS agents needed</li><li>Auto-resolves complaints</li></ul>
+        <div class="agent-metric-row"><div><div class="agent-metric-val" id="cust-val" style="color:rgb(139,92,246)">312</div><div class="agent-metric-lbl">RESOLVED/HR</div></div><div class="mini-chart" id="chart-cust"></div></div>
+        <div class="agent-launch">OPEN DASHBOARD →</div>
+      </div>
+      <div class="agent-card ac-infra" style="color:rgb(0,255,157)" onclick="window.location.href='infra-ai.html'" title="Open Infra AI">
+        <div class="agent-icon">⚡</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="agent-name">INFRA AI</div>
+          <div class="live-badge lb-g"><div class="status-dot pulse-g"></div>LIVE</div>
+        </div>
+        <div class="agent-role">SELF-HEALER · LAYER 5</div>
+        <ul class="agent-features"><li>GPS + IoT anomaly detection</li><li>Accident auto-detection</li><li>Instant rider reassignment</li><li>Proactive customer alerts</li><li>Self-healing logistics network</li></ul>
+        <div class="agent-metric-row"><div><div class="agent-metric-val" id="infra-val" style="color:rgb(0,255,157)">99.97%</div><div class="agent-metric-lbl">UPTIME</div></div><div class="mini-chart" id="chart-infra"></div></div>
+        <div class="agent-launch">OPEN DASHBOARD →</div>
+      </div>
+      <div class="agent-card ac-demand" style="color:rgb(255,210,0)" onclick="showComingSoon('DEMAND AI','rgb(255,210,0)')" title="Open Demand AI">
+        <div class="agent-icon">🔮</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="agent-name">DEMAND AI</div>
+          <div class="live-badge" style="background:rgba(255,210,0,.1);color:rgb(255,210,0);border:1px solid rgba(255,210,0,.4);padding:3px 10px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;display:inline-flex;align-items:center;gap:5px"><div class="status-dot" style="background:rgb(255,210,0);width:6px;height:6px;border-radius:50%;animation:pulse-dot 1.5s ease-in-out infinite .6s"></div>LIVE</div>
+        </div>
+        <div class="agent-role">STOCK PREDICTOR · LAYER 4</div>
+        <ul class="agent-features"><li>ML demand forecasting</li><li>Neighborhood surge prediction</li><li>Auto dark-store restocking</li><li>72-hour demand lookahead</li><li>Zero stock-mismatch failures</li></ul>
+        <div class="agent-metric-row"><div><div class="agent-metric-val" id="demand-val" style="color:rgb(255,210,0)">98.4%</div><div class="agent-metric-lbl">ACCURACY</div></div><div class="mini-chart" id="chart-demand"></div></div>
+      </div>
+      <div class="agent-card ac-pay" style="color:rgb(255,45,85)" onclick="showComingSoon('PAYMENT AI','rgb(255,45,85)')" title="Open Payment AI">
+        <div class="agent-icon">🔐</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="agent-name">PAYMENT AI</div>
+          <div class="live-badge" style="background:rgba(255,45,85,.1);color:rgb(255,45,85);border:1px solid rgba(255,45,85,.4);padding:3px 10px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;display:inline-flex;align-items:center;gap:5px"><div class="status-dot" style="background:rgb(255,45,85);width:6px;height:6px;border-radius:50%;animation:pulse-dot 1.5s ease-in-out infinite .9s"></div>LIVE</div>
+        </div>
+        <div class="agent-role">BLOCKCHAIN SHIELD · LAYER 6</div>
+        <ul class="agent-features"><li>Blockchain transaction engine</li><li>Smart contract auto-validation</li><li>AI fraud detection &lt;0.3s</li><li>Crypto + fiat support</li><li>Decentralized secure payments</li></ul>
+        <div class="agent-metric-row"><div><div class="agent-metric-val" id="pay-val" style="color:rgb(255,45,85)">156</div><div class="agent-metric-lbl">BLOCKED/HR</div></div><div class="mini-chart" id="chart-pay"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<div class="section">
+  <p class="section-tag">◈ LIVE AI DECISION ENGINE</p>
+  <h2 class="section-title">Real-Time Command Center</h2>
+  <p class="section-sub">Every autonomous AI decision, streamed live. No human approved any of this.</p>
+  <div id="terminal">
+    <div class="term-header">
+      <div class="term-dot" style="background:#ff5f57"></div>
+      <div class="term-dot" style="background:#ffbd2e"></div>
+      <div class="term-dot" style="background:#28c840"></div>
+      <span class="term-title">meta-ai-ceo — autonomous_decision_stream — live_ops</span>
+      <div style="margin-left:auto" class="live-badge lb-c"><div class="status-dot pulse-c"></div>STREAMING</div>
+    </div>
+    <div class="term-body" id="term-body"></div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<div class="section">
+  <p class="section-tag">◈ REAL-TIME LOGISTICS NETWORK</p>
+  <h2 class="section-title">Live City Operations</h2>
+  <p class="section-sub">Every dot is an AI-dispatched rider. Every line is an AI-computed route.</p>
+  <div id="map-wrap">
+    <canvas id="city-canvas"></canvas>
+    <div class="map-overlay">
+      <div class="live-badge lb-c"><div class="status-dot pulse-c"></div>AI TRACKING ACTIVE</div>
+    </div>
+    <div class="map-status">
+      <div class="map-legend">
+        <div class="ml-item"><div class="ml-dot" style="background:rgb(0,245,255)"></div>RIDER</div>
+        <div class="ml-item"><div class="ml-dot" style="background:rgb(255,210,0);border-radius:2px"></div>WAREHOUSE</div>
+        <div class="ml-item"><div class="ml-dot" style="background:rgba(255,107,53,.5)"></div>HOTSPOT</div>
+        <div class="ml-item"><div class="ml-dot" style="background:rgba(0,245,255,.3)"></div>ROUTE</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<div class="section">
+  <p class="section-tag">◈ SYSTEM PERFORMANCE ANALYTICS</p>
+  <h2 class="section-title">AI Operations Dashboard</h2>
+  <p class="section-sub">Every metric autonomously tracked, optimized, and improved by AI.</p>
+  <div class="analytics-grid">
+    <div class="ana-card ana-g"><div class="ana-icon">✅</div><div class="ana-val" style="color:rgb(0,255,157)" id="an-success">98.7%</div><div class="ana-lbl">DELIVERY SUCCESS RATE</div><div class="ana-change up">▲ +2.3% this week</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-success"></canvas></div></div>
+    <div class="ana-card ana-c"><div class="ana-icon">💰</div><div class="ana-val" style="color:rgb(0,245,255)" id="an-cost">42%</div><div class="ana-lbl">COST REDUCTION</div><div class="ana-change up">▲ vs human ops baseline</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-cost"></canvas></div></div>
+    <div class="ana-card ana-p"><div class="ana-icon">🛡️</div><div class="ana-val" style="color:rgb(139,92,246)" id="an-prevented">1,847</div><div class="ana-lbl">FAILURES PREVENTED TODAY</div><div class="ana-change up">▲ 14 in last minute</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-prevented"></canvas></div></div>
+    <div class="ana-card ana-y"><div class="ana-icon">⚡</div><div class="ana-val" style="color:rgb(255,210,0)" id="an-decisions">967</div><div class="ana-lbl">AI DECISIONS / MIN</div><div class="ana-change up">▲ trending up</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-decisions"></canvas></div></div>
+    <div class="ana-card ana-o"><div class="ana-icon">⛽</div><div class="ana-val" style="color:rgb(255,107,53)" id="an-fuel">₹18.4K</div><div class="ana-lbl">FUEL SAVINGS TODAY</div><div class="ana-change up">▲ +₹340 this hour</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-fuel"></canvas></div></div>
+    <div class="ana-card ana-c"><div class="ana-icon">⏱️</div><div class="ana-val" style="color:rgb(0,245,255)" id="an-time">22 min</div><div class="ana-lbl">AVG DELIVERY TIME</div><div class="ana-change up">▼ −8 min vs humans</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-time"></canvas></div></div>
+    <div class="ana-card ana-g"><div class="ana-icon">🟢</div><div class="ana-val" style="color:rgb(0,255,157)" id="an-health">100%</div><div class="ana-lbl">SYSTEM HEALTH SCORE</div><div class="ana-change up">◎ All 6 AI agents nominal</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-health"></canvas></div></div>
+    <div class="ana-card ana-r"><div class="ana-icon">🔐</div><div class="ana-val" style="color:rgb(255,45,85)" id="an-security">99.97%</div><div class="ana-lbl">PAYMENT SECURITY</div><div class="ana-change up">▲ Blockchain verified</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-security"></canvas></div></div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<div class="section">
+  <p class="section-tag">◈ AI INCIDENT AUTO-RESOLUTION</p>
+  <h2 class="section-title">AI Fixes Everything. Automatically.</h2>
+  <p class="section-sub">Zero escalations. Every incident closed in under 3 seconds. No human ever touched these.</p>
+  <div class="incident-grid">
+    <div class="inc-card"><div class="inc-problem">⚠ Traffic jam detected — ORR Bangalore</div><div class="inc-row"><span class="inc-label">AI ACTION</span><span class="inc-value">→ Alternative route computed in 312ms</span></div><div class="inc-row"><span class="inc-label">NOTIFY</span><span class="inc-value">→ Customer ETA auto-updated</span></div><div class="inc-row"><span class="inc-label">RESULT</span><span class="inc-result">→ Delay reduced by 18 minutes</span></div><div class="inc-row"><span class="inc-label">SAVING</span><span class="inc-result">→ ₹2,400 saved · Zero human touch</span></div><div class="inc-time">✓ Resolved in 1.8s · 0 human interventions</div></div>
+    <div class="inc-card"><div class="inc-problem">⚠ Rider device failure — HSR Layout</div><div class="inc-row"><span class="inc-label">AI ACTION</span><span class="inc-value">→ Nearest rider reassigned in 3s</span></div><div class="inc-row"><span class="inc-label">NOTIFY</span><span class="inc-value">→ Customer informed proactively</span></div><div class="inc-row"><span class="inc-label">RESULT</span><span class="inc-result">→ On-time delivery achieved</span></div><div class="inc-row"><span class="inc-label">SAVING</span><span class="inc-result">→ Zero failed delivery · ₹840 preserved</span></div><div class="inc-time">✓ Resolved in 2.4s · 0 human interventions</div></div>
+    <div class="inc-card"><div class="inc-problem">⚠ Stock mismatch — Whitefield dark store</div><div class="inc-row"><span class="inc-label">AI ACTION</span><span class="inc-value">→ Nearest warehouse auto-rebalanced</span></div><div class="inc-row"><span class="inc-label">NOTIFY</span><span class="inc-value">→ Order silently rerouted</span></div><div class="inc-row"><span class="inc-label">RESULT</span><span class="inc-result">→ Customer unaffected</span></div><div class="inc-row"><span class="inc-label">SAVING</span><span class="inc-result">→ ₹8,900 saved · Zero SLA breach</span></div><div class="inc-time">✓ Resolved in 0.9s · 0 human interventions</div></div>
+    <div class="inc-card"><div class="inc-problem">⚠ Fraudulent order detected — ₹94,000</div><div class="inc-row"><span class="inc-label">AI ACTION</span><span class="inc-value">→ Blocked pre-dispatch in 0.3s</span></div><div class="inc-row"><span class="inc-label">NOTIFY</span><span class="inc-value">→ Blockchain flagged + payment reversed</span></div><div class="inc-row"><span class="inc-label">RESULT</span><span class="inc-result">→ Zero financial loss</span></div><div class="inc-row"><span class="inc-label">SAVING</span><span class="inc-result">→ ₹94,000 protected · Fraud chain severed</span></div><div class="inc-time">✓ Resolved in 0.3s · 0 human interventions</div></div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<div class="section">
+  <p class="section-tag">◈ PAYMENT AI — BLOCKCHAIN ENGINE</p>
+  <h2 class="section-title">Decentralized Transaction Ledger</h2>
+  <p class="section-sub">Every payment validated by AI smart contracts. Immutable. Unhackable. Instant.</p>
+  <div id="chain-container" class="chain-wrap"></div>
+</div>
+
+<div class="glow-div"></div>
+
+<div class="section">
+  <p class="section-tag">◈ FUTURE ROADMAP</p>
+  <h2 class="section-title">What Comes Next</h2>
+  <p class="section-sub">The next evolution of autonomous logistics intelligence.</p>
+  <div class="future-grid">
+    <div class="fut-card"><div class="fut-icon">🚁</div><div class="fut-title">DRONE FLEET AI</div><div class="fut-desc">Autonomous aerial delivery coordinated by AI — zero pilots, sub-10min delivery.</div><div class="fut-badge">→ IN DEVELOPMENT</div></div>
+    <div class="fut-card"><div class="fut-icon">🤖</div><div class="fut-title">WAREHOUSE ROBOTS</div><div class="fut-desc">Self-organizing robotic fulfillment — picks, packs, loads without any human supervision.</div><div class="fut-badge">→ IN DEVELOPMENT</div></div>
+    <div class="fut-card"><div class="fut-icon">🧬</div><div class="fut-title">SELF-REWRITING AI</div><div class="fut-desc">AI rewrites its own dispatch algorithms every 24 hours using live performance data.</div><div class="fut-badge">→ Q3 2025</div></div>
+    <div class="fut-card"><div class="fut-icon">🌐</div><div class="fut-title">GLOBAL LOGISTICS MESH</div><div class="fut-desc">Cross-city, cross-country autonomous coordination — one AI brain, planetary scale.</div><div class="fut-badge">→ Q4 2025</div></div>
+    <div class="fut-card"><div class="fut-icon">🛰️</div><div class="fut-title">SATELLITE SYNC</div><div class="fut-desc">Real-time satellite weather + traffic integration for 99.99% route precision.</div><div class="fut-badge">→ 2026</div></div>
+    <div class="fut-card"><div class="fut-icon">🚨</div><div class="fut-title">AI EMERGENCY BRAIN</div><div class="fut-desc">Autonomous crisis AI — handles natural disasters, mass-rerouting, emergency supply chains.</div><div class="fut-badge">→ 2026</div></div>
+  </div>
+</div>
+
+<div id="footer">
+  <div class="footer-logo">🧠 META-AI CEO OS</div>
+  <div class="footer-sub">POWERED BY AUTONOMOUS INTELLIGENCE · v5.0.2 · NO HUMANS REQUIRED</div>
+  <div class="footer-stats">
+    <div class="f-stat"><div class="status-dot pulse-g"></div><span>UPTIME: 99.97%</span></div>
+    <div class="f-stat"><div class="status-dot pulse-c"></div><span>AI DECISIONS TODAY: <span id="footer-decisions">48,000</span></span></div>
+    <div class="f-stat"><div class="status-dot" style="background:rgb(139,92,246);box-shadow:0 0 10px rgb(139,92,246);animation:pulse-dot 1.5s ease-in-out infinite .4s"></div><span>HUMANS NEEDED: ZERO</span></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const cv=document.getElementById('hero-canvas');
+  const ctx=cv.getContext('2d');
+  let W,H,pts=[];
+  function resize(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;pts=Array.from({length:70},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,r:Math.random()*1.8+.4,alpha:Math.random()*.6+.2}));}
+  function draw(){ctx.clearRect(0,0,W,H);pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<120){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(0,245,255,${.12*(1-d/120)})`;ctx.lineWidth=.6;ctx.stroke();}}));pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(0,245,255,${p.alpha})`;ctx.fill();});requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+})();
+
+const AGENT_COLORS={fleet:'rgb(0,245,255)',scale:'rgb(255,107,53)',cust:'rgb(139,92,246)',infra:'rgb(0,255,157)',demand:'rgb(255,210,0)',pay:'rgb(255,45,85)'};
+function makeMiniChart(id,color){const wrap=document.getElementById(id);if(!wrap)return;const data=Array.from({length:10},()=>Math.random()*60+40);const max=Math.max(...data);wrap.innerHTML='';data.forEach(v=>{const bar=document.createElement('div');bar.className='mini-bar';bar.style.height=(v/max*100)+'%';bar.style.background=color;wrap.appendChild(bar);});}
+Object.entries(AGENT_COLORS).forEach(([k,v])=>makeMiniChart('chart-'+k,v));
+setInterval(()=>{Object.entries(AGENT_COLORS).forEach(([k])=>{const wrap=document.getElementById('chart-'+k);if(!wrap)return;wrap.querySelectorAll('.mini-bar').forEach(b=>b.style.height=(Math.random()*60+40)+'%');});},1600);
+
+const AGENT_METRICS={fleet:{el:'fleet-val',base:847,fmt:v=>Math.round(v).toString()},scale:{el:'scale-val',base:4200,fmt:v=>'₹'+(Math.round(v/100)*100/1000).toFixed(1)+'K'},cust:{el:'cust-val',base:312,fmt:v=>Math.round(v).toString()},infra:{el:'infra-val',base:99.97,fmt:v=>v.toFixed(2)+'%'},demand:{el:'demand-val',base:98.4,fmt:v=>v.toFixed(1)+'%'},pay:{el:'pay-val',base:156,fmt:v=>Math.round(v).toString()}};
+setInterval(()=>{Object.values(AGENT_METRICS).forEach(m=>{const el=document.getElementById(m.el);if(el){const j=(Math.random()-.5)*m.base*.04;el.textContent=m.fmt(m.base+j);}});},1900);
+
+const LOGS=[
+  {src:'[META-AI CEO]',cls:'log-src-ceo',msgs:['→ Demand spike detected — Koramangala Sector 5','→ All agents synchronized — autonomous cycle complete','→ System operating at peak efficiency · 0 humans needed','→ Re-dispatching 34 orders after route recalculation','→ Self-healing cycle complete — 2.4s resolution time']},
+  {src:'[GTI FLEET AI]',cls:'log-src-fleet',msgs:['→ Route optimized for Rider R-4721 in 312ms','→ Traffic jam on Outer Ring Rd — 156 riders rerouted','→ Fuel efficiency improved by 12% this hour','→ 847 concurrent routes recalculated successfully']},
+  {src:'[CUSTOMER AI]',cls:'log-src-cust',msgs:['→ Pre-arrival call placed to Customer #C-9981','→ Unavailable customer detected — reattempt prevented ₹840','→ Complaint #C-4421 auto-resolved in 1.2s','→ Refund prediction triggered: 94% confidence']},
+  {src:'[INFRA AI]',cls:'log-src-infra',msgs:['→ Anomaly detected: Rider #R-3847 stationary 4min','→ Reassigned order to Rider #R-4102 — 0.8km away','→ Self-healing cycle initiated across 3 zones']},
+  {src:'[SCALE AI]',cls:'log-src-scale',msgs:['→ Scaling down 40% compute — demand trough','→ Cost saved this minute: ₹342','→ Infrastructure cost optimization: -18% vs last hour']},
+  {src:'[DEMAND AI]',cls:'log-src-demand',msgs:['→ Surge predicted in Indiranagar in 22 minutes','→ Dark store pre-stock triggered: 400 units, Whitefield','→ Weekend demand forecast: +34% Koramangala']},
+  {src:'[PAYMENT AI]',cls:'log-src-pay',msgs:['→ Fraudulent order #FF-4492 blocked in 0.3s — ₹94K saved','→ Blockchain transaction #TXN-9921 validated','→ 156 suspicious transactions blocked this hour']},
+];
+const termBody=document.getElementById('term-body');
+function addLog(){const entry=LOGS[Math.floor(Math.random()*LOGS.length)];const msg=entry.msgs[Math.floor(Math.random()*entry.msgs.length)];const time=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});const line=document.createElement('div');line.className='log-line';line.innerHTML=`<span class="log-time">[${time}]</span><span class="${entry.cls}">${entry.src}</span><span class="log-msg"> ${msg}</span>`;termBody.appendChild(line);if(termBody.children.length>60)termBody.removeChild(termBody.firstChild);termBody.scrollTop=termBody.scrollHeight;}
+for(let i=0;i<8;i++)addLog();
+setInterval(addLog,1200);
+const cur=document.createElement('div');cur.className='log-line';cur.innerHTML='<span class="log-src-ceo">▸</span><span class="cursor-blink"></span>';termBody.appendChild(cur);
+
+(function(){
+  const cv=document.getElementById('city-canvas');const ctx=cv.getContext('2d');let W,H;
+  const warehouses=[{x:.15,y:.2},{x:.75,y:.15},{x:.5,y:.65},{x:.82,y:.72},{x:.3,y:.75}];
+  const hotspots=[{x:.35,y:.42,r:.1},{x:.62,y:.52,r:.08},{x:.22,y:.68,r:.06},{x:.7,y:.35,r:.07}];
+  let riders=[];
+  function initRiders(){riders=Array.from({length:14},(_,i)=>({x:Math.random(),y:Math.random(),vx:(Math.random()-.5)*.003,vy:(Math.random()-.5)*.003,color:['rgba(0,245,255,1)','rgba(0,255,157,1)','rgba(255,210,0,1)','rgba(255,107,53,1)'][i%4],target:Math.floor(Math.random()*warehouses.length),pulseR:0,pulsing:false}));}
+  function resize(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;initRiders();}
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(0,245,255,.04)';ctx.lineWidth=1;
+    for(let i=0;i<=10;i++){ctx.beginPath();ctx.moveTo(i*W/10,0);ctx.lineTo(i*W/10,H);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*H/10);ctx.lineTo(W,i*H/10);ctx.stroke();}
+    hotspots.forEach(h=>{const g=ctx.createRadialGradient(h.x*W,h.y*H,0,h.x*W,h.y*H,h.r*Math.min(W,H));g.addColorStop(0,'rgba(255,107,53,.18)');g.addColorStop(1,'rgba(255,107,53,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(h.x*W,h.y*H,h.r*Math.min(W,H),0,Math.PI*2);ctx.fill();});
+    riders.forEach(r=>{const t=warehouses[r.target];ctx.beginPath();ctx.moveTo(r.x*W,r.y*H);ctx.lineTo(t.x*W,t.y*H);ctx.strokeStyle=r.color.replace('1)','.18)');ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);});
+    warehouses.forEach(w=>{const x=w.x*W,y=w.y*H,t=Date.now()/1000;ctx.strokeStyle='rgba(255,210,0,.8)';ctx.fillStyle='rgba(255,210,0,.12)';ctx.lineWidth=1.5;ctx.beginPath();ctx.rect(x-8,y-8,16,16);ctx.fill();ctx.stroke();ctx.fillStyle='rgba(255,210,0,1)';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.strokeStyle=`rgba(255,210,0,${.3+.2*Math.sin(t*2)})`;ctx.lineWidth=.8;ctx.beginPath();ctx.arc(x,y,14+4*Math.sin(t*2),0,Math.PI*2);ctx.stroke();});
+    riders.forEach(r=>{const t=warehouses[r.target];r.vx+=(t.x-r.x)*.0008+(Math.random()-.5)*.004;r.vy+=(t.y-r.y)*.0008+(Math.random()-.5)*.004;r.vx=Math.max(-.006,Math.min(.006,r.vx));r.vy=Math.max(-.006,Math.min(.006,r.vy));r.x=Math.max(.02,Math.min(.98,r.x+r.vx));r.y=Math.max(.02,Math.min(.98,r.y+r.vy));if(Math.abs(r.x-t.x)<.03&&Math.abs(r.y-t.y)<.03){r.target=Math.floor(Math.random()*warehouses.length);r.pulsing=true;r.pulseR=0;}if(r.pulsing){r.pulseR+=.8;if(r.pulseR>18)r.pulsing=false;}const x=r.x*W,y=r.y*H;if(r.pulsing){ctx.beginPath();ctx.arc(x,y,r.pulseR,0,Math.PI*2);ctx.strokeStyle=r.color.replace('1)',`${Math.max(0,1-r.pulseR/18)})`);;ctx.lineWidth=1;ctx.stroke();}ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.strokeStyle=r.color.replace('1)','.2)');ctx.lineWidth=1;ctx.stroke();ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle=r.color;ctx.fill();ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();});
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize);resize();draw();
+})();
+
+const SPARK_COLORS={'sp-success':'rgba(0,255,157,','sp-cost':'rgba(0,245,255,','sp-prevented':'rgba(139,92,246,','sp-decisions':'rgba(255,210,0,','sp-fuel':'rgba(255,107,53,','sp-time':'rgba(0,245,255,','sp-health':'rgba(0,255,157,','sp-security':'rgba(255,45,85,'};
+const sparkData={};
+Object.keys(SPARK_COLORS).forEach(id=>{sparkData[id]=Array.from({length:20},()=>Math.random()*40+60);});
+function drawSparklines(){Object.entries(SPARK_COLORS).forEach(([id,col])=>{const cv=document.getElementById(id);if(!cv)return;const ctx=cv.getContext('2d');const W=cv.width=cv.offsetWidth||150;const H=cv.height=cv.offsetHeight||32;ctx.clearRect(0,0,W,H);const data=sparkData[id];const min=Math.min(...data),max=Math.max(...data);const step=W/(data.length-1);ctx.beginPath();data.forEach((v,i)=>{const x=i*step,y=H-(v-min)/(max-min||1)*(H*.7)-(H*.15);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.strokeStyle=col+'1)';ctx.lineWidth=1.5;ctx.stroke();ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,col+'.25)');g.addColorStop(1,col+'0)');ctx.fillStyle=g;ctx.fill();});}
+setInterval(()=>{Object.keys(sparkData).forEach(id=>{sparkData[id].shift();sparkData[id].push(Math.random()*40+60);});drawSparklines();},1500);
+setTimeout(drawSparklines,200);
+
+function buildChain(){const container=document.getElementById('chain-container');container.innerHTML='';const blocks=[{id:'#A3F2',tx:'Order #44421',val:'₹1,240'},{id:'#B7E1',tx:'Order #44422',val:'₹890'},{id:'#C4D8',tx:'Order #44423',val:'₹2,100'},{id:'#D9C7',tx:'Order #44424',val:'₹450'},{id:'#E2B5',tx:'Order #44425',val:'₹3,200'},{id:'#F1A3',tx:'Order #44426',val:'₹780'}];blocks.forEach((b,i)=>{const node=document.createElement('div');node.className='block-node';node.innerHTML=`<div style="font-size:10px;font-weight:700;margin-bottom:3px">${b.id}</div><div>${b.tx}</div><div style="color:rgba(0,255,157,.8);margin-top:2px">${b.val}</div><div class="block-hash">${Math.random().toString(36).substr(2,6)}...</div>`;container.appendChild(node);if(i<blocks.length-1){const link=document.createElement('div');link.className='chain-link chain-pulse';link.style.animationDelay=(i*.3)+'s';container.appendChild(link);}});}
+buildChain();
+setInterval(()=>{const n=Math.floor(Math.random()*9000+1000);const container=document.getElementById('chain-container');const link=document.createElement('div');link.className='chain-link chain-pulse';const node=document.createElement('div');node.className='block-node';node.style.animation='fadein .4s ease';node.innerHTML=`<div style="font-size:10px;font-weight:700;margin-bottom:3px">#NEW</div><div>Order #${44427+Math.floor(Math.random()*100)}</div><div style="color:rgba(0,255,157,.8);margin-top:2px">₹${n}</div><div class="block-hash">${Math.random().toString(36).substr(2,6)}...</div>`;container.appendChild(link);container.appendChild(node);container.scrollLeft=container.scrollWidth;if(container.children.length>22){container.removeChild(container.firstChild);container.removeChild(container.firstChild);}},4000);
+
+function updateClock(){const el=document.getElementById('nav-time');if(el)el.textContent=new Date().toLocaleTimeString('en-US',{hour12:false});}
+setInterval(updateClock,1000);updateClock();
+
+let decisionCount=48000;
+setInterval(()=>{decisionCount+=Math.floor(Math.random()*30+10);const el=document.getElementById('footer-decisions');if(el)el.textContent=decisionCount.toLocaleString();},1200);
+
+const cycleTexts=['ZERO HUMAN INTERVENTION · AI DISPATCHES · AI PREDICTS · AI SOLVES','SELF-HEALING INFRA · BLOCKCHAIN PAYMENTS · ML DEMAND FORECASTING','6 AI AGENTS · 1 CEO BRAIN · INFINITE AUTONOMOUS CAPACITY','ROUTE OPTIMIZED IN 500ms · FRAUD BLOCKED IN 0.3s · SELF-RECOVERY IN 2.4s'];
+let cycleIdx=0;const heroDesc=document.getElementById('hero-cycle');if(heroDesc)heroDesc.style.transition='opacity .3s';
+setInterval(()=>{cycleIdx=(cycleIdx+1)%cycleTexts.length;if(heroDesc){heroDesc.style.opacity='0';setTimeout(()=>{heroDesc.textContent=cycleTexts[cycleIdx];heroDesc.style.opacity='1';},300);}},4000);
+
+setInterval(()=>{const el=document.getElementById('an-decisions');if(el)el.textContent=Math.round(900+Math.random()*200);const el2=document.getElementById('an-prevented');if(el2){const v=parseInt(el2.textContent.replace(',',''))||1847;el2.textContent=(v+Math.floor(Math.random()*3)).toLocaleString();}},1800);
+</script>
+<div id="ai-modal">
+  <div class="modal-box" id="modal-box">
+    <div class="modal-title" id="modal-title">SCALE AI</div>
+    <div class="modal-msg">◎ MODULE LOADING<br><br>This AI agent dashboard<br>is coming online soon.<br><br>BACKEND CONNECTED · FRONTEND IN BUILD</div>
+    <button class="modal-close" onclick="document.getElementById('ai-modal').classList.remove('show')">CLOSE ✕</button>
+  </div>
+</div>
+
+<script>
+function showComingSoon(name, color) {
+  const modal = document.getElementById('ai-modal');
+  const box = document.getElementById('modal-box');
+  const title = document.getElementById('modal-title');
+  title.textContent = name;
+  title.style.color = color;
+  box.style.borderColor = color.replace('rgb(','rgba(').replace(')',', .4)');
+  box.style.boxShadow = '0 0 60px ' + color.replace('rgb(','rgba(').replace(')',', .2)');
+  modal.classList.add('show');
+}
+document.getElementById('ai-modal').addEventListener('click', function(e){
+  if(e.target === this) this.classList.remove('show');
+});
+</script>
+</body>
+</html>

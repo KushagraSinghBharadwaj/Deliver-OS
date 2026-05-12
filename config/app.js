@@ -1,0 +1,61 @@
+'use strict';
+
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
+const trafficRoutes = require('./routes/traffic.routes');
+app.use('/api/fleet', trafficRoutes);
+const logger = require('./utils/logger');
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+
+const authRoutes = require('./routes/auth.routes');
+const fleetRoutes = require('./routes/fleet.routes');
+const customerRoutes = require('./routes/customer.routes');
+const infraRoutes = require('./routes/infra.routes');
+const demandRoutes = require('./routes/demand.routes');
+const paymentRoutes = require('./routes/payment.routes');
+const scaleRoutes = require('./routes/scale.routes');
+const analyticsRoutes = require('./routes/analytics.routes');
+const riderRoutes = require('./routes/rider.routes');
+const orderRoutes = require('./routes/order.routes');
+
+const app = express();
+
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(cors({ origin: '*', methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], allowedHeaders: ['Content-Type','Authorization','x-api-key'], credentials: true }));
+app.use(compression());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(morgan('combined', { stream: { write: (msg) => logger.http(msg.trim()) } }));
+
+const globalLimiter = rateLimit({ windowMs: 900000, max: 500, standardHeaders: true, legacyHeaders: false });
+app.use('/api/', globalLimiter);
+const authLimiter = rateLimit({ windowMs: 900000, max: 20 });
+app.use('/api/auth/', authLimiter);
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/health', (req, res) => res.json({ status: 'operational', system: 'META-AI CEO OS v5.0.2' }));
+
+app.use('/api/auth', authRoutes);
+app.use('/api/fleet', fleetRoutes);
+app.use('/api/customer', customerRoutes);
+app.use('/api/infra', infraRoutes);
+app.use('/api/demand', demandRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/scale', scaleRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/riders', riderRoutes);
+app.use('/api/orders', orderRoutes);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
+app.use('/api/analytics', require('./routes/analytics.routes'));
+app.use('/api/fleet',     require('./routes/fleet.routes'));
+app.use('/api/fleet',     require('./routes/traffic.routes')); // ← add this
+
+module.exports = app;

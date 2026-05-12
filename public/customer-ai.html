@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Customer AI — Autonomous Customer Communication Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --c:0,245,255;--p:139,92,246;--g:0,255,157;--y:255,210,0;--r:255,45,85;--o:255,107,53;
+  --bg:#00000a;--bg2:#03020f;--bg3:#060318;
+}
+body{background:var(--bg);color:#fff;font-family:'Exo 2',sans-serif;overflow-x:hidden}
+.mono{font-family:'Share Tech Mono',monospace}
+.orb{font-family:'Orbitron',monospace}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#000}::-webkit-scrollbar-thumb{background:rgba(var(--p),.4);border-radius:2px}
+
+/* NAV */
+#nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:rgba(0,0,10,.88);border-bottom:1px solid rgba(var(--p),.2);backdrop-filter:blur(20px)}
+.nav-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;background:linear-gradient(90deg,rgb(var(--p)),rgb(var(--c)));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-back{display:flex;align-items:center;gap:8px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--c),.7);letter-spacing:2px;text-decoration:none;padding:5px 12px;border:1px solid rgba(var(--c),.25);border-radius:6px;transition:all .2s;cursor:pointer}
+.nav-back:hover{background:rgba(var(--c),.08);border-color:rgba(var(--c),.5)}
+.nav-status{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.status-dot{width:6px;height:6px;border-radius:50%;animation:pulse-dot 1.5s ease-in-out infinite;flex-shrink:0}
+.pulse-c{background:rgb(var(--c));box-shadow:0 0 10px rgb(var(--c))}
+.pulse-p{background:rgb(var(--p));box-shadow:0 0 10px rgb(var(--p))}
+.pulse-g{background:rgb(var(--g));box-shadow:0 0 10px rgb(var(--g))}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.6)}}
+
+/* HERO */
+#hero{position:relative;min-height:680px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse 80% 55% at 50% 50%,rgba(var(--p),.1) 0%,rgba(var(--c),.03) 50%,transparent 80%);padding:40px 20px}
+#hero-canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.hero-content{position:relative;z-index:10;text-align:center}
+
+/* Brain rings */
+.brain-wrap{position:relative;width:200px;height:200px;margin:0 auto 28px;display:flex;align-items:center;justify-content:center}
+.ring{position:absolute;border-radius:50%;border:1px solid;animation:spin linear infinite}
+.ring1{width:200px;height:200px;border-color:rgba(var(--p),.5);animation-duration:9s;box-shadow:0 0 24px rgba(var(--p),.3)}
+.ring2{width:168px;height:168px;border-color:rgba(var(--c),.35);animation-duration:6.5s;animation-direction:reverse}
+.ring3{width:136px;height:136px;border-color:rgba(var(--p),.25);animation-duration:12s;border-style:dashed}
+.ring4{width:104px;height:104px;border-color:rgba(var(--c),.5);animation-duration:4.5s;animation-direction:reverse}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.core-inner{width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(var(--p),.35),rgba(var(--c),.2),rgba(0,0,40,.92));border:2px solid rgba(var(--p),.9);box-shadow:0 0 50px rgba(var(--p),.7),0 0 100px rgba(var(--c),.2),inset 0 0 30px rgba(var(--p),.2);display:flex;align-items:center;justify-content:center;font-size:32px;animation:core-breathe 3s ease-in-out infinite;position:relative;z-index:2}
+@keyframes core-breathe{0%,100%{box-shadow:0 0 50px rgba(var(--p),.7),0 0 100px rgba(var(--c),.2),inset 0 0 30px rgba(var(--p),.2)}50%{box-shadow:0 0 80px rgba(var(--p),.95),0 0 160px rgba(var(--c),.35),inset 0 0 50px rgba(var(--p),.3)}}
+
+.hero-tag{display:inline-block;padding:5px 18px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgba(var(--p),1);background:rgba(var(--p),.08);border:1px solid rgba(var(--p),.35);margin-bottom:14px;animation:ptag-glow 2s ease-in-out infinite alternate}
+@keyframes ptag-glow{from{box-shadow:0 0 5px rgba(var(--p),.2)}to{box-shadow:0 0 24px rgba(var(--p),.6)}}
+
+.hero-title{font-family:'Orbitron',monospace;font-size:clamp(32px,6vw,58px);font-weight:900;letter-spacing:5px;background:linear-gradient(135deg,#fff 0%,rgb(var(--p)) 40%,rgb(var(--c)) 75%,#fff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;animation:title-glow 5s ease-in-out infinite alternate}
+@keyframes title-glow{from{filter:brightness(1)}to{filter:brightness(1.4)}}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.45);letter-spacing:4px;margin-bottom:8px;font-weight:300;text-transform:uppercase}
+.hero-cycle{font-size:11px;color:rgba(var(--p),.9);letter-spacing:2px;font-family:'Share Tech Mono',monospace;margin-bottom:28px;transition:opacity .3s;min-height:18px}
+
+/* Status pills row */
+.status-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:26px}
+.s-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;background:rgba(var(--p),.08);border:1px solid rgba(var(--p),.3);color:rgb(var(--p));animation:pill-breathe 3s ease-in-out infinite}
+@keyframes pill-breathe{0%,100%{opacity:.7}50%{opacity:1}}
+
+.hero-stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.h-stat{padding:12px 18px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(var(--p),.2);backdrop-filter:blur(10px);text-align:center;min-width:120px}
+.h-stat-val{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:rgb(var(--p))}
+.h-stat-val.c{color:rgb(var(--c))}
+.h-stat-val.g{color:rgb(var(--g))}
+.h-stat-lbl{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-top:3px}
+
+.glow-div{height:1px;background:linear-gradient(90deg,transparent,rgba(var(--p),.4),rgba(var(--c),.3),transparent);margin:0 0 2px}
+
+/* SECTION */
+.section{padding:44px 20px;max-width:1200px;margin:0 auto}
+.section-tag{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgba(var(--p),.8);margin-bottom:8px}
+.section-title{font-family:'Orbitron',monospace;font-size:clamp(18px,3vw,28px);font-weight:700;margin-bottom:6px;color:#fff}
+.section-sub{font-size:12px;color:rgba(255,255,255,.38);margin-bottom:28px;max-width:580px}
+
+/* GLASS CARD */
+.glass{background:rgba(var(--p),.04);border:1px solid rgba(var(--p),.18);border-radius:16px;backdrop-filter:blur(14px);position:relative;overflow:hidden}
+.glass::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(var(--p),.5),rgba(var(--c),.3),transparent)}
+.glass-c{background:rgba(var(--c),.03);border-color:rgba(var(--c),.18)}
+.glass-c::before{background:linear-gradient(90deg,transparent,rgba(var(--c),.5),transparent)}
+
+/* === SECTION 2: CALLING SYSTEM === */
+.call-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){.call-layout{grid-template-columns:1fr}}
+.call-card{padding:22px;border-radius:16px}
+.call-status-header{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.call-icon{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;background:radial-gradient(circle,rgba(var(--p),.3),rgba(var(--p),.05));border:1.5px solid rgba(var(--p),.5);box-shadow:0 0 24px rgba(var(--p),.4);position:relative}
+.call-rings{position:absolute;width:52px;height:52px;border-radius:50%}
+.call-rings::before,.call-rings::after{content:'';position:absolute;border-radius:50%;border:1px solid rgba(var(--p),.4);top:50%;left:50%;transform:translate(-50%,-50%);animation:call-ring-anim 2s ease-out infinite}
+.call-rings::after{animation-delay:.7s}
+@keyframes call-ring-anim{0%{width:52px;height:52px;opacity:.8}100%{width:90px;height:90px;opacity:0}}
+.call-name{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:2px;color:rgb(var(--p))}
+.call-sub{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--p),.6);letter-spacing:1px;margin-top:2px}
+
+/* Voice wave */
+.voice-wave{display:flex;align-items:center;gap:3px;height:40px;margin:16px 0;justify-content:center}
+.wave-bar{width:4px;border-radius:2px;background:linear-gradient(to top,rgba(var(--p),.3),rgba(var(--p),1));animation:wave-anim 1s ease-in-out infinite}
+@keyframes wave-anim{0%,100%{transform:scaleY(.2)}50%{transform:scaleY(1)}}
+
+.call-timeline{margin-top:14px}
+.ct-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:10px}
+.ct-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ct-time{font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.3);min-width:52px;font-size:9px}
+.ct-txt{color:rgba(255,255,255,.65)}
+
+.call-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.ci-item{padding:10px;border-radius:8px;background:rgba(var(--p),.06);border:1px solid rgba(var(--p),.15)}
+.ci-label{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--p),.6);letter-spacing:1px;margin-bottom:4px}
+.ci-val{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:rgb(var(--p))}
+
+/* IVR Flow */
+.ivr-flow{margin-top:16px}
+.ivr-msg{background:rgba(var(--p),.08);border:1px solid rgba(var(--p),.2);border-radius:10px;padding:10px 14px;font-size:10px;color:rgba(255,255,255,.75);margin-bottom:8px;font-style:italic;position:relative}
+.ivr-msg::before{content:'🎙 AI';position:absolute;top:-9px;left:12px;font-size:8px;font-family:'Share Tech Mono',monospace;color:rgba(var(--p),.8);background:var(--bg);padding:0 5px}
+.ivr-opts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.ivr-btn{padding:6px 14px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1px;border:1px solid rgba(var(--p),.35);color:rgba(var(--p),.9);background:rgba(var(--p),.06);cursor:pointer;transition:all .2s}
+.ivr-btn:hover,.ivr-btn.active{background:rgba(var(--p),.2);border-color:rgba(var(--p),.7);box-shadow:0 0 12px rgba(var(--p),.3)}
+
+/* === SECTION 3: NOTIFICATION ENGINE === */
+.notif-stream{display:flex;flex-direction:column;gap:10px;max-height:340px;overflow:hidden;position:relative}
+.notif-stream::after{content:'';position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(to top,var(--bg),transparent);pointer-events:none}
+.notif-card{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-radius:12px;animation:notif-in .4s ease;transition:all .3s}
+@keyframes notif-in{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
+.notif-icon-wrap{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.notif-body{flex:1;min-width:0}
+.notif-title{font-size:10px;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:3px}
+.notif-msg{font-size:9px;color:rgba(255,255,255,.45);font-family:'Share Tech Mono',monospace;line-height:1.5}
+.notif-time{font-size:8px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.2);margin-top:3px}
+.notif-badge{font-size:8px;font-family:'Share Tech Mono',monospace;padding:2px 8px;border-radius:10px;letter-spacing:1px;white-space:nowrap}
+.nb-cyan{background:rgba(var(--c),.1);color:rgb(var(--c));border:1px solid rgba(var(--c),.3)}
+.nb-green{background:rgba(var(--g),.1);color:rgb(var(--g));border:1px solid rgba(var(--g),.3)}
+.nb-purple{background:rgba(var(--p),.1);color:rgb(var(--p));border:1px solid rgba(var(--p),.3)}
+.nb-orange{background:rgba(var(--o),.1);color:rgb(var(--o));border:1px solid rgba(var(--o),.3)}
+.nb-red{background:rgba(var(--r),.1);color:rgb(var(--r));border:1px solid rgba(var(--r),.3)}
+
+/* === SECTION 4: OTP === */
+.otp-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){.otp-layout{grid-template-columns:1fr}}
+
+.otp-display{text-align:center;padding:28px 20px}
+.otp-label{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgba(var(--c),.6);margin-bottom:16px}
+.otp-digits{display:flex;justify-content:center;gap:10px;margin-bottom:20px}
+.otp-digit{width:52px;height:64px;border-radius:10px;background:rgba(var(--c),.06);border:1.5px solid rgba(var(--c),.35);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:26px;font-weight:700;color:rgb(var(--c));box-shadow:0 0 20px rgba(var(--c),.2);transition:all .3s}
+.otp-digit.verified{background:rgba(var(--g),.1);border-color:rgba(var(--g),.6);color:rgb(var(--g));box-shadow:0 0 24px rgba(var(--g),.35)}
+.otp-timer{display:flex;align-items:center;justify-content:center;gap:8px;font-size:11px;font-family:'Share Tech Mono',monospace;color:rgba(var(--c),.7);margin-bottom:16px}
+.timer-ring{width:40px;height:40px;position:relative}
+.timer-svg{width:40px;height:40px;transform:rotate(-90deg)}
+.timer-bg{fill:none;stroke:rgba(var(--c),.1);stroke-width:3}
+.timer-fg{fill:none;stroke:rgb(var(--c));stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.timer-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:rgb(var(--c))}
+
+.otp-steps{padding:20px}
+.otp-step{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.otp-step:last-child{border:none}
+.step-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:10px;font-weight:700;flex-shrink:0;border:1.5px solid}
+.step-active{background:rgba(var(--c),.15);border-color:rgba(var(--c),.7);color:rgb(var(--c));box-shadow:0 0 12px rgba(var(--c),.4)}
+.step-done{background:rgba(var(--g),.12);border-color:rgba(var(--g),.6);color:rgb(var(--g))}
+.step-pending{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.3)}
+.step-title{font-size:10px;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:2px}
+.step-sub{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.35)}
+
+/* === SECTION 5: CHATBOT === */
+.chat-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){.chat-layout{grid-template-columns:1fr}}
+.chatbox{padding:0;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;height:420px}
+.chat-header{padding:14px 18px;background:rgba(var(--p),.08);border-bottom:1px solid rgba(var(--p),.15);display:flex;align-items:center;gap:10px}
+.chat-avatar{width:36px;height:36px;border-radius:50%;background:radial-gradient(circle,rgba(var(--p),.5),rgba(var(--p),.1));border:1.5px solid rgba(var(--p),.6);display:flex;align-items:center;justify-content:center;font-size:16px;animation:avatar-pulse 3s ease-in-out infinite}
+@keyframes avatar-pulse{0%,100%{box-shadow:0 0 10px rgba(var(--p),.4)}50%{box-shadow:0 0 25px rgba(var(--p),.8)}}
+.chat-ai-name{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:rgb(var(--p));letter-spacing:2px}
+.chat-ai-status{font-size:8px;font-family:'Share Tech Mono',monospace;color:rgba(var(--g),.8);letter-spacing:1px}
+.chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.chat-messages::-webkit-scrollbar{width:2px}
+.chat-messages::-webkit-scrollbar-thumb{background:rgba(var(--p),.3)}
+.msg{max-width:80%;display:flex;flex-direction:column;animation:msg-in .3s ease}
+@keyframes msg-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg-bubble{padding:9px 14px;border-radius:12px;font-size:10px;line-height:1.6}
+.msg-time{font-size:8px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.2);margin-top:3px}
+.msg-user{align-self:flex-end}
+.msg-user .msg-bubble{background:rgba(var(--c),.1);border:1px solid rgba(var(--c),.25);color:rgba(255,255,255,.8);border-radius:12px 12px 2px 12px}
+.msg-user .msg-time{text-align:right}
+.msg-ai .msg-bubble{background:rgba(var(--p),.1);border:1px solid rgba(var(--p),.2);color:rgba(255,255,255,.8);border-radius:12px 12px 12px 2px}
+.typing-bubble{display:flex;align-items:center;gap:4px;padding:10px 14px}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:rgba(var(--p),.7);animation:typing 1.2s ease-in-out infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes typing{0%,80%,100%{transform:scale(.7);opacity:.5}40%{transform:scale(1);opacity:1}}
+.chat-suggestions{display:flex;gap:6px;padding:10px 14px;flex-wrap:wrap;border-top:1px solid rgba(var(--p),.1)}
+.sugg-btn{padding:5px 11px;border-radius:14px;font-size:8px;font-family:'Share Tech Mono',monospace;letter-spacing:1px;border:1px solid rgba(var(--p),.3);color:rgba(var(--p),.8);background:rgba(var(--p),.05);cursor:pointer;transition:all .2s}
+.sugg-btn:hover{background:rgba(var(--p),.15);border-color:rgba(var(--p),.6)}
+
+/* right side - chatbot features */
+.chat-features-list{display:flex;flex-direction:column;gap:10px}
+.cf-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;background:rgba(var(--p),.05);border:1px solid rgba(var(--p),.12);transition:all .2s}
+.cf-item:hover{background:rgba(var(--p),.1);border-color:rgba(var(--p),.3)}
+.cf-icon{font-size:20px;width:36px;text-align:center}
+.cf-name{font-size:10px;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:2px}
+.cf-desc{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.35)}
+
+/* === SECTION 6: COMPLAINT ENGINE === */
+.complaint-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){.complaint-grid{grid-template-columns:1fr}}
+.complaint-stream{padding:18px;max-height:360px;overflow:hidden}
+.complaint-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);animation:fadein .4s ease}
+@keyframes fadein{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.ci-sentiment{font-size:18px;width:28px;text-align:center;flex-shrink:0;margin-top:1px}
+.ci-content{flex:1}
+.ci-title{font-size:10px;color:rgba(255,255,255,.75);margin-bottom:3px}
+.ci-resolution{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--g),.8)}
+.ci-badge{font-size:8px;font-family:'Share Tech Mono',monospace;padding:2px 8px;border-radius:10px;background:rgba(var(--g),.1);color:rgb(var(--g));border:1px solid rgba(var(--g),.25);margin-top:4px;display:inline-block}
+.ci-badge.escalated{background:rgba(var(--r),.1);color:rgb(var(--r));border-color:rgba(var(--r),.25)}
+.complaint-analytics{padding:18px;display:flex;flex-direction:column;gap:14px}
+.ca-metric{display:flex;align-items:center;gap:12px}
+.ca-label{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.4);min-width:140px}
+.ca-bar-wrap{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.06);overflow:hidden}
+.ca-bar{height:100%;border-radius:4px;transition:width .5s ease}
+.ca-val{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;min-width:48px;text-align:right}
+
+/* === SECTION 7: AVAILABILITY AI === */
+.avail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:700px){.avail-grid{grid-template-columns:1fr}}
+.avail-card{padding:18px;border-radius:14px}
+.avail-name{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,255,255,.55);letter-spacing:1px;margin-bottom:6px}
+.avail-cust{font-size:12px;font-weight:600;color:#fff;margin-bottom:10px}
+.conf-ring{position:relative;width:80px;height:80px;margin:0 auto 10px}
+.conf-svg{width:80px;height:80px;transform:rotate(-90deg)}
+.conf-bg{fill:none;stroke:rgba(255,255,255,.06);stroke-width:6}
+.conf-fg{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 1.5s ease}
+.conf-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Orbitron',monospace;font-size:14px;font-weight:700}
+.avail-window{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.35);text-align:center;margin-top:4px}
+.avail-learning{font-size:8px;color:rgba(var(--p),.6);font-family:'Share Tech Mono',monospace;margin-top:6px;text-align:center}
+
+/* === SECTION 8: INCIDENT LOG === */
+#term-body{padding:16px;height:260px;overflow-y:auto;font-family:'Share Tech Mono',monospace;font-size:11px;line-height:1.9}
+#term-body::-webkit-scrollbar{width:3px}#term-body::-webkit-scrollbar-thumb{background:rgba(var(--p),.3)}
+.log-line{display:flex;gap:8px;animation:fadein .3s ease}
+.log-time{color:rgba(255,255,255,.22);min-width:72px}
+.log-src-main{color:rgb(var(--p))}
+.log-src-call{color:rgb(var(--c))}
+.log-src-otp{color:rgb(var(--g))}
+.log-src-comp{color:rgb(var(--r))}
+.log-src-avail{color:rgb(var(--y))}
+.log-msg{color:rgba(255,255,255,.55)}
+.cursor-blink{display:inline-block;width:7px;height:12px;background:rgb(var(--p));animation:blink .8s step-end infinite;margin-left:3px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.term-header{display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(var(--p),.05);border-bottom:1px solid rgba(var(--p),.12)}
+.term-dot{width:10px;height:10px;border-radius:50%}
+.term-title{font-size:10px;font-family:'Share Tech Mono',monospace;color:rgba(var(--p),.7);letter-spacing:2px;margin-left:8px}
+.live-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px}
+.lb-p{background:rgba(var(--p),.1);color:rgb(var(--p));border:1px solid rgba(var(--p),.4)}
+.lb-c{background:rgba(var(--c),.1);color:rgb(var(--c));border:1px solid rgba(var(--c),.4)}
+.lb-g{background:rgba(var(--g),.1);color:rgb(var(--g));border:1px solid rgba(var(--g),.4)}
+
+/* === SECTION 9: ANALYTICS === */
+.analytics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:700px){.analytics-grid{grid-template-columns:repeat(2,1fr)}}
+.ana-card{border-radius:14px;padding:16px;background:rgba(3,2,15,.9);border:1px solid rgba(255,255,255,.07);position:relative;overflow:hidden}
+.ana-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.ana-p::after{background:linear-gradient(90deg,transparent,rgb(var(--p)),transparent)}
+.ana-c::after{background:linear-gradient(90deg,transparent,rgb(var(--c)),transparent)}
+.ana-g::after{background:linear-gradient(90deg,transparent,rgb(var(--g)),transparent)}
+.ana-y::after{background:linear-gradient(90deg,transparent,rgb(var(--y)),transparent)}
+.ana-o::after{background:linear-gradient(90deg,transparent,rgb(var(--o)),transparent)}
+.ana-r::after{background:linear-gradient(90deg,transparent,rgb(var(--r)),transparent)}
+.ana-icon{font-size:18px;margin-bottom:8px}
+.ana-val{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;margin-bottom:2px}
+.ana-lbl{font-size:9px;color:rgba(255,255,255,.38);letter-spacing:1px;margin-bottom:8px}
+.ana-change{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgb(var(--g))}
+.sparkline-wrap{height:30px;position:relative;margin-top:8px}
+.sparkline{width:100%;height:100%}
+
+/* === SECTION 10: SELF-LEARNING === */
+.learning-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+@media(max-width:700px){.learning-grid{grid-template-columns:1fr}}
+.learn-card{padding:18px;border-radius:14px;border:1px solid rgba(var(--p),.18);background:rgba(var(--p),.04);position:relative;overflow:hidden}
+.learn-icon{font-size:24px;margin-bottom:8px}
+.learn-title{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:rgb(var(--p));letter-spacing:2px;margin-bottom:6px}
+.learn-val{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;margin-bottom:4px}
+.learn-sub{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.35)}
+.neural-pulse{position:absolute;bottom:0;right:0;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(var(--p),.15),transparent);animation:npulse 3s ease-in-out infinite;pointer-events:none}
+@keyframes npulse{0%,100%{transform:scale(0.8);opacity:.6}50%{transform:scale(1.2);opacity:1}}
+.learn-banner{padding:16px 20px;border-radius:12px;background:linear-gradient(135deg,rgba(var(--p),.1),rgba(var(--c),.05));border:1px solid rgba(var(--p),.25);display:flex;align-items:center;gap:14px}
+.lb-icon{font-size:28px}
+.lb-text{font-size:11px;font-family:'Share Tech Mono',monospace;line-height:1.7}
+.lb-highlight{color:rgb(var(--p));font-weight:600}
+
+/* FOOTER */
+#footer{border-top:1px solid rgba(var(--p),.15);padding:24px;text-align:center;background:rgba(0,0,5,.85)}
+.footer-logo{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,rgba(var(--p),1),rgba(var(--c),1));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.footer-sub{font-size:9px;color:rgba(255,255,255,.25);font-family:'Share Tech Mono',monospace;letter-spacing:2px;margin-bottom:12px}
+.footer-stats{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
+.f-stat{font-size:9px;font-family:'Share Tech Mono',monospace;display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.45)}
+
+/* Horizontal scroll OTP steps */
+.otp-flow-steps{display:flex;gap:0;align-items:center;overflow-x:auto;padding:12px 0;margin-bottom:0}
+.otp-flow-steps::-webkit-scrollbar{height:3px}
+.otp-flow-step{min-width:100px;padding:12px;border-radius:10px;text-align:center;font-size:9px;font-family:'Share Tech Mono',monospace;flex-shrink:0;border:1px solid}
+.otp-arrow{width:28px;height:2px;flex-shrink:0;position:relative}
+.otp-arrow::after{content:'';position:absolute;right:-3px;top:-3px;width:8px;height:8px;border-right:2px solid;border-top:2px solid;transform:rotate(45deg)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div style="display:flex;align-items:center;gap:14px">
+    <a class="nav-back" href="index.html" onclick="history.back();return false">← META-AI CEO</a>
+    <div class="nav-logo">🎙 CUSTOMER AI</div>
+  </div>
+  <div class="nav-status">
+    <div class="status-dot pulse-p"></div>
+    <span style="font-size:9px;letter-spacing:2px;color:rgba(139,92,246,.8);font-family:'Share Tech Mono',monospace">AUTONOMOUS MODE ACTIVE</span>
+    <div class="status-dot pulse-c" style="animation-delay:.4s"></div>
+    <span style="font-size:9px;letter-spacing:2px;color:rgba(0,245,255,.7);font-family:'Share Tech Mono',monospace">CALLING CUSTOMERS</span>
+    <span id="nav-time" style="font-size:9px;color:rgba(255,255,255,.25);font-family:'Share Tech Mono',monospace;margin-left:4px"></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content">
+    <div class="brain-wrap">
+      <div class="ring ring1"></div><div class="ring ring2"></div><div class="ring ring3"></div><div class="ring ring4"></div>
+      <div class="core-inner">🎙</div>
+    </div>
+    <div class="hero-tag">◎ AUTONOMOUS CUSTOMER COMMUNICATION & DELIVERY INTELLIGENCE ENGINE</div>
+    <h1 class="hero-title">CUSTOMER AI</h1>
+    <p class="hero-sub">NO HUMAN AGENTS · FULL AI CONTROL · END-TO-END COMMUNICATION</p>
+    <p class="hero-cycle" id="hero-cycle">CALLING CUSTOMERS · VERIFYING DELIVERIES · RESOLVING COMPLAINTS AUTONOMOUSLY</p>
+    <div class="status-pills">
+      <div class="s-pill"><div class="status-dot pulse-p" style="animation-delay:0s"></div>LIVE</div>
+      <div class="s-pill" style="animation-delay:.3s"><div class="status-dot pulse-c" style="animation-delay:.3s"></div>CALLING CUSTOMERS</div>
+      <div class="s-pill" style="animation-delay:.6s"><div class="status-dot pulse-g" style="animation-delay:.6s;background:rgb(var(--g));box-shadow:0 0 10px rgb(var(--g))"></div>VERIFYING DELIVERIES</div>
+      <div class="s-pill" style="animation-delay:.9s"><div class="status-dot pulse-p" style="animation-delay:.9s"></div>PROCESSING REQUESTS</div>
+      <div class="s-pill" style="animation-delay:1.2s"><div class="status-dot pulse-c" style="animation-delay:1.2s"></div>RESOLVING COMPLAINTS</div>
+      <div class="s-pill" style="animation-delay:1.5s"><div class="status-dot" style="animation-delay:1.5s;background:rgb(var(--y));box-shadow:0 0 10px rgb(var(--y));animation:pulse-dot 1.5s ease-in-out infinite 1.5s"></div>PREDICTING AVAILABILITY</div>
+    </div>
+    <div class="hero-stats">
+      <div class="h-stat"><div class="h-stat-val" id="stat-calls">847</div><div class="h-stat-lbl">CALLS / HOUR</div></div>
+      <div class="h-stat"><div class="h-stat-val c" id="stat-prevented">312</div><div class="h-stat-lbl">FAILURES PREVENTED</div></div>
+      <div class="h-stat"><div class="h-stat-val g" id="stat-resolved">1,204</div><div class="h-stat-lbl">COMPLAINTS RESOLVED</div></div>
+      <div class="h-stat"><div class="h-stat-val" id="stat-otp">98.7%</div><div class="h-stat-lbl">OTP SUCCESS RATE</div></div>
+      <div class="h-stat"><div class="h-stat-val c">0.8s</div><div class="h-stat-lbl">AI RESPONSE SPEED</div></div>
+      <div class="h-stat"><div class="h-stat-val g">96.4%</div><div class="h-stat-lbl">CSAT PREDICTION</div></div>
+      <div class="h-stat"><div class="h-stat-val" id="stat-saved">₹84K</div><div class="h-stat-lbl">REATTEMPT COST SAVED</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-div"></div>
+
+<!-- SECTION 2: AI CALLING SYSTEM -->
+<div class="section">
+  <p class="section-tag">◈ AI AUTO-CALLING SYSTEM · SECTION 02</p>
+  <h2 class="section-title">Autonomous AI Voice Engine</h2>
+  <p class="section-sub">AI calls every customer before rider arrives. Detects availability, handles rescheduling — zero human agents.</p>
+  <div class="call-layout">
+    <!-- Active call panel -->
+    <div class="glass call-card">
+      <div class="call-status-header">
+        <div class="call-icon">
+          <div class="call-rings"></div>
+          📞
+        </div>
+        <div>
+          <div class="call-name" id="call-customer-name">CALLING: PRIYA SHARMA</div>
+          <div class="call-sub" id="call-sub-status">AI VOICE ASSISTANT · ACTIVE CALL · 00:23</div>
+        </div>
+        <div class="live-badge lb-p" style="margin-left:auto"><div class="status-dot pulse-p"></div>LIVE</div>
+      </div>
+
+      <!-- Voice wave -->
+      <div class="voice-wave" id="voice-wave">
+        <!-- generated by JS -->
+      </div>
+
+      <!-- IVR message -->
+      <div class="ivr-flow">
+        <div class="ivr-msg" id="ivr-msg">"Hello Priya, your delivery will arrive in 7 minutes. Your rider Rahul is en route."</div>
+        <div class="ivr-opts">
+          <div class="ivr-btn active" id="ivr-btn-1">1 — AVAILABLE</div>
+          <div class="ivr-btn" id="ivr-btn-2">2 — RESCHEDULE</div>
+          <div class="ivr-btn" id="ivr-btn-3">3 — DOORSTEP</div>
+        </div>
+      </div>
+
+      <!-- Call timeline -->
+      <div class="call-timeline" id="call-timeline"></div>
+    </div>
+
+    <!-- Metrics / features -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="glass call-card" style="padding:16px">
+        <div style="font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;color:rgba(var(--p),.7);margin-bottom:12px">LIVE CALL METRICS</div>
+        <div class="call-info-grid">
+          <div class="ci-item"><div class="ci-label">CALLS / MIN</div><div class="ci-val" id="ci-cpm">14</div></div>
+          <div class="ci-item"><div class="ci-label">AVAILABLE</div><div class="ci-val" id="ci-avail" style="color:rgb(var(--g))">89%</div></div>
+          <div class="ci-item"><div class="ci-label">RESCHEDULED</div><div class="ci-val" id="ci-resc" style="color:rgb(var(--y))">23</div></div>
+          <div class="ci-item"><div class="ci-label">REDIRECTED</div><div class="ci-val" id="ci-redir" style="color:rgb(var(--c))">11</div></div>
+        </div>
+      </div>
+      <div class="glass call-card" style="padding:16px">
+        <div style="font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;color:rgba(var(--p),.7);margin-bottom:10px">AI CALLING CAPABILITIES</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:7px">
+          <li style="display:flex;align-items:center;gap:8px;font-size:10px;color:rgba(255,255,255,.6)"><span style="color:rgb(var(--p))">›</span>Multi-language AI voice (12 languages)</li>
+          <li style="display:flex;align-items:center;gap:8px;font-size:10px;color:rgba(255,255,255,.6)"><span style="color:rgb(var(--p))">›</span>Voice emotion & intent detection</li>
+          <li style="display:flex;align-items:center;gap:8px;font-size:10px;color:rgba(255,255,255,.6)"><span style="color:rgb(var(--p))">›</span>Smart retry with best-time prediction</li>
+          <li style="display:flex;align-items:center;gap:8px;font-size:10px;color:rgba(255,255,255,.6)"><span style="color:rgb(var(--p))">›</span>Emergency contact escalation</li>
+          <li style="display:flex;align-items:center;gap:8px;font-size:10px;color:rgba(255,255,255,.6)"><span style="color:rgb(var(--p))">›</span>Auto-delays rider if customer unavailable</li>
+          <li style="display:flex;align-items:center;gap:8px;font-size:10px;color:rgba(255,255,255,.6)"><span style="color:rgb(var(--p))">›</span>Updates GTI Fleet AI instantly</li>
+          <li style="display:flex;align-items:center;gap:8px;font-size:10px;color:rgba(255,255,255,.6)"><span style="color:rgb(var(--p))">›</span>AI rescheduling assistant built-in</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- SECTION 3: NOTIFICATION ENGINE -->
+<div class="section">
+  <p class="section-tag">◈ REAL-TIME NOTIFICATION ENGINE · SECTION 03</p>
+  <h2 class="section-title">Live Customer Notification Stream</h2>
+  <p class="section-sub">AI-generated smart messages delivered instantly across all channels — SMS, WhatsApp, push, voice.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div class="glass glass-c" style="padding:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <span style="font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;color:rgba(var(--c),.7)">LIVE NOTIFICATION FEED</span>
+        <div class="live-badge lb-c"><div class="status-dot pulse-c"></div>STREAMING</div>
+      </div>
+      <div class="notif-stream" id="notif-stream"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="glass glass-c" style="padding:16px">
+        <div style="font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;color:rgba(var(--c),.7);margin-bottom:12px">CHANNEL DELIVERY RATES</div>
+        <div style="display:flex;flex-direction:column;gap:10px" id="channel-stats">
+          <div><div style="display:flex;justify-content:space-between;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.45);margin-bottom:4px"><span>PUSH NOTIFICATIONS</span><span style="color:rgb(var(--g))">99.2%</span></div><div style="height:5px;border-radius:3px;background:rgba(255,255,255,.05);overflow:hidden"><div style="width:99%;height:100%;background:rgb(var(--g));border-radius:3px"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.45);margin-bottom:4px"><span>SMS</span><span style="color:rgb(var(--c))">98.7%</span></div><div style="height:5px;border-radius:3px;background:rgba(255,255,255,.05);overflow:hidden"><div style="width:98%;height:100%;background:rgb(var(--c));border-radius:3px"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.45);margin-bottom:4px"><span>WHATSAPP</span><span style="color:rgb(var(--p))">97.4%</span></div><div style="height:5px;border-radius:3px;background:rgba(255,255,255,.05);overflow:hidden"><div style="width:97%;height:100%;background:rgb(var(--p));border-radius:3px"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.45);margin-bottom:4px"><span>AI VOICE CALL</span><span style="color:rgb(var(--y))">92.1%</span></div><div style="height:5px;border-radius:3px;background:rgba(255,255,255,.05);overflow:hidden"><div style="width:92%;height:100%;background:rgb(var(--y));border-radius:3px"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.45);margin-bottom:4px"><span>EMAIL</span><span style="color:rgb(var(--o))">88.5%</span></div><div style="height:5px;border-radius:3px;background:rgba(255,255,255,.05);overflow:hidden"><div style="width:88%;height:100%;background:rgb(var(--o));border-radius:3px"></div></div></div>
+        </div>
+      </div>
+      <div class="glass glass-c" style="padding:16px">
+        <div style="font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;color:rgba(var(--c),.7);margin-bottom:10px">NOTIFICATIONS SENT TODAY</div>
+        <div style="font-family:'Orbitron',monospace;font-size:32px;font-weight:900;color:rgb(var(--c))" id="notif-count">48,291</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.3);font-family:'Share Tech Mono',monospace;margin-top:4px">▲ +1,204 this hour · 100% AI-generated</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- SECTION 4: OTP SYSTEM -->
+<div class="section">
+  <p class="section-tag">◈ OTP DELIVERY VERIFICATION · SECTION 04</p>
+  <h2 class="section-title">Secure AI-Powered OTP Engine</h2>
+  <p class="section-sub">Fraud-proof delivery verification. AI-generated, time-limited OTPs with instant mismatch detection.</p>
+
+  <!-- Flow steps -->
+  <div style="display:flex;align-items:center;gap:0;overflow-x:auto;padding:14px 0;margin-bottom:20px">
+    <div class="otp-flow-step" style="background:rgba(var(--g),.08);border-color:rgba(var(--g),.4);color:rgb(var(--g))">RIDER ARRIVES<br><span style="opacity:.5;font-size:8px">Step 1</span></div>
+    <div class="otp-arrow" style="background:linear-gradient(90deg,rgba(var(--g),.4),rgba(var(--g),.8))"><div style="height:100%;background:inherit;position:relative"></div><div style="position:absolute;right:-4px;top:-3.5px;width:8px;height:8px;border-right:2px solid rgba(var(--g),.8);border-top:2px solid rgba(var(--g),.8);transform:rotate(45deg)"></div></div>
+    <div class="otp-flow-step" style="background:rgba(var(--c),.08);border-color:rgba(var(--c),.4);color:rgb(var(--c))">AI SENDS OTP<br><span style="opacity:.5;font-size:8px">Step 2</span></div>
+    <div class="otp-arrow" style="background:linear-gradient(90deg,rgba(var(--c),.4),rgba(var(--c),.8))"><div style="position:absolute;right:-4px;top:-3.5px;width:8px;height:8px;border-right:2px solid rgba(var(--c),.8);border-top:2px solid rgba(var(--c),.8);transform:rotate(45deg)"></div></div>
+    <div class="otp-flow-step" style="background:rgba(var(--p),.08);border-color:rgba(var(--p),.4);color:rgb(var(--p))">CUSTOMER SHARES<br><span style="opacity:.5;font-size:8px">Step 3</span></div>
+    <div class="otp-arrow" style="background:linear-gradient(90deg,rgba(var(--p),.4),rgba(var(--p),.8))"><div style="position:absolute;right:-4px;top:-3.5px;width:8px;height:8px;border-right:2px solid rgba(var(--p),.8);border-top:2px solid rgba(var(--p),.8);transform:rotate(45deg)"></div></div>
+    <div class="otp-flow-step" style="background:rgba(var(--y),.08);border-color:rgba(var(--y),.4);color:rgb(var(--y))">RIDER VERIFIES<br><span style="opacity:.5;font-size:8px">Step 4</span></div>
+    <div class="otp-arrow" style="background:linear-gradient(90deg,rgba(var(--y),.4),rgba(var(--y),.8))"><div style="position:absolute;right:-4px;top:-3.5px;width:8px;height:8px;border-right:2px solid rgba(var(--y),.8);border-top:2px solid rgba(var(--y),.8);transform:rotate(45deg)"></div></div>
+    <div class="otp-flow-step" style="background:rgba(var(--g),.12);border-color:rgba(var(--g),.5);color:rgb(var(--g))">AI CONFIRMS<br><span style="opacity:.5;font-size:8px">Step 5</span></div>
+    <div class="otp-arrow" style="background:linear-gradient(90deg,rgba(var(--g),.4),rgba(var(--g),.8))"><div style="position:absolute;right:-4px;top:-3.5px;width:8px;height:8px;border-right:2px solid rgba(var(--g),.8);border-top:2px solid rgba(var(--g),.8);transform:rotate(45deg)"></div></div>
+    <div class="otp-flow-step" style="background:rgba(var(--r),.08);border-color:rgba(var(--r),.4);color:rgb(var(--r))">PAYMENT RELEASED<br><span style="opacity:.5;font-size:8px">Step 6</span></div>
+  </div>
+
+  <div class="otp-layout">
+    <!-- OTP Display -->
+    <div class="glass" style="text-align:center;padding:28px 20px">
+      <div style="font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgba(var(--c),.6);margin-bottom:16px">ACTIVE OTP GENERATION</div>
+      <div class="otp-digits" id="otp-digits">
+        <div class="otp-digit">-</div>
+        <div class="otp-digit">-</div>
+        <div class="otp-digit">-</div>
+        <div class="otp-digit">-</div>
+        <div class="otp-digit">-</div>
+        <div class="otp-digit">-</div>
+      </div>
+      <div class="otp-timer">
+        <div class="timer-ring">
+          <svg class="timer-svg" viewBox="0 0 40 40"><circle class="timer-bg" cx="20" cy="20" r="16"/><circle class="timer-fg" id="timer-fg" cx="20" cy="20" r="16" stroke="rgb(0,245,255)" stroke-dasharray="100.5" stroke-dashoffset="0"/></svg>
+          <div class="timer-num" id="timer-num">30</div>
+        </div>
+        <span style="color:rgba(var(--c),.7)">OTP expires in <span id="timer-text">30</span>s</span>
+      </div>
+      <div style="font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--g),.8);margin-top:8px" id="otp-status">🔐 ENCRYPTED · AI-VERIFIED · SECURE HANDOFF</div>
+      <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <div style="font-size:9px;font-family:'Share Tech Mono',monospace;padding:5px 12px;border-radius:8px;background:rgba(var(--g),.08);border:1px solid rgba(var(--g),.25);color:rgba(var(--g),.8)">✓ FRAUD CHECK PASSED</div>
+        <div style="font-size:9px;font-family:'Share Tech Mono',monospace;padding:5px 12px;border-radius:8px;background:rgba(var(--c),.08);border:1px solid rgba(var(--c),.25);color:rgba(var(--c),.8)">🔒 256-BIT ENCRYPTED</div>
+        <div style="font-size:9px;font-family:'Share Tech Mono',monospace;padding:5px 12px;border-radius:8px;background:rgba(var(--p),.08);border:1px solid rgba(var(--p),.25);color:rgba(var(--p),.8)">📡 AI MISMATCH DETECT</div>
+      </div>
+    </div>
+
+    <!-- OTP Steps -->
+    <div class="glass" style="padding:20px">
+      <div style="font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;color:rgba(var(--c),.7);margin-bottom:14px">LIVE VERIFICATION LOG</div>
+      <div id="otp-steps-list"></div>
+      <div style="margin-top:16px;padding:12px;border-radius:10px;background:rgba(var(--g),.07);border:1px solid rgba(var(--g),.2)">
+        <div style="font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--g),.8);margin-bottom:4px">OTP SUCCESS RATE TODAY</div>
+        <div style="font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:rgb(var(--g))">98.7%</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.3);font-family:'Share Tech Mono',monospace;margin-top:3px">4,291 verifications · 56 fraud attempts blocked</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- SECTION 5: AI CHATBOT -->
+<div class="section">
+  <p class="section-tag">◈ AI CHATBOT & CUSTOMER ASSISTANT · SECTION 05</p>
+  <h2 class="section-title">Autonomous Customer Intelligence</h2>
+  <p class="section-sub">Zero human agents. AI handles every query — order tracking, rescheduling, refunds, complaints.</p>
+  <div class="chat-layout">
+    <!-- Chat window -->
+    <div class="glass chatbox">
+      <div class="chat-header">
+        <div class="chat-avatar">🤖</div>
+        <div>
+          <div class="chat-ai-name">CUSTOMER AI</div>
+          <div class="chat-ai-status">● ONLINE · RESPONSE TIME: 0.8s</div>
+        </div>
+        <div class="live-badge lb-p" style="margin-left:auto"><div class="status-dot pulse-p"></div>ACTIVE</div>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-suggestions" id="chat-suggestions">
+        <div class="sugg-btn" onclick="sendUserMsg('Where is my order?')">📦 Track order</div>
+        <div class="sugg-btn" onclick="sendUserMsg('I want to reschedule')">📅 Reschedule</div>
+        <div class="sugg-btn" onclick="sendUserMsg('I have a complaint')">⚠️ Complaint</div>
+        <div class="sugg-btn" onclick="sendUserMsg('Request refund')">💸 Refund</div>
+      </div>
+    </div>
+
+    <!-- Features list -->
+    <div class="chat-features-list">
+      <div class="cf-item"><div class="cf-icon">📦</div><div><div class="cf-name">ORDER TRACKING</div><div class="cf-desc">Real-time rider location, ETA, status updates</div></div></div>
+      <div class="cf-item"><div class="cf-icon">📅</div><div><div class="cf-name">DELIVERY RESCHEDULING</div><div class="cf-desc">AI picks best slot based on your availability pattern</div></div></div>
+      <div class="cf-item"><div class="cf-icon">💸</div><div><div class="cf-name">REFUND HANDLING</div><div class="cf-desc">Instant refund prediction & auto-initiation</div></div></div>
+      <div class="cf-item"><div class="cf-icon">⚠️</div><div><div class="cf-name">COMPLAINT RESOLUTION</div><div class="cf-desc">Sentiment analysis + auto-resolution in &lt;3s</div></div></div>
+      <div class="cf-item"><div class="cf-icon">📍</div><div><div class="cf-name">DELIVERY INSTRUCTIONS</div><div class="cf-desc">Update address, leave at door, neighbor delivery</div></div></div>
+      <div class="cf-item"><div class="cf-icon">💳</div><div><div class="cf-name">PAYMENT ISSUES</div><div class="cf-desc">COD switch, payment retry, confirmation queries</div></div></div>
+      <div class="cf-item"><div class="cf-icon">🌐</div><div><div class="cf-name">12 LANGUAGE SUPPORT</div><div class="cf-desc">Hindi, Kannada, Tamil, Telugu, English + more</div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- SECTION 6: COMPLAINT ENGINE -->
+<div class="section">
+  <p class="section-tag">◈ AI COMPLAINT RESOLUTION ENGINE · SECTION 06</p>
+  <h2 class="section-title">Autonomous Complaint Resolution</h2>
+  <p class="section-sub">AI detects frustration, escalates priority, generates solutions, auto-resolves — no human ever involved.</p>
+  <div class="complaint-grid">
+    <div class="glass" style="padding:0">
+      <div style="padding:14px 18px;border-bottom:1px solid rgba(var(--r),.1);display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;color:rgba(var(--r),.7)">LIVE COMPLAINT STREAM</span>
+        <div class="live-badge" style="background:rgba(var(--r),.08);color:rgb(var(--r));border:1px solid rgba(var(--r),.3);padding:3px 10px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;display:inline-flex;align-items:center;gap:5px"><div class="status-dot" style="background:rgb(var(--r));box-shadow:0 0 6px rgb(var(--r));animation:pulse-dot 1.5s ease-in-out infinite"></div>RESOLVING</div>
+      </div>
+      <div class="complaint-stream" id="complaint-stream"></div>
+    </div>
+    <div class="glass" style="padding:18px">
+      <div style="font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;color:rgba(var(--p),.7);margin-bottom:16px">AI RESOLUTION ANALYTICS</div>
+      <div class="complaint-analytics" id="complaint-analytics">
+        <div class="ca-metric"><span class="ca-label">AUTO-RESOLVED</span><div class="ca-bar-wrap"><div class="ca-bar" style="width:94%;background:rgb(var(--g))"></div></div><span class="ca-val" style="color:rgb(var(--g))">94%</span></div>
+        <div class="ca-metric"><span class="ca-label">LATE DELIVERY</span><div class="ca-bar-wrap"><div class="ca-bar" style="width:88%;background:rgb(var(--y))"></div></div><span class="ca-val" style="color:rgb(var(--y))">88%</span></div>
+        <div class="ca-metric"><span class="ca-label">REFUND ISSUED</span><div class="ca-bar-wrap"><div class="ca-bar" style="width:76%;background:rgb(var(--c))"></div></div><span class="ca-val" style="color:rgb(var(--c))">76%</span></div>
+        <div class="ca-metric"><span class="ca-label">COUPON SENT</span><div class="ca-bar-wrap"><div class="ca-bar" style="width:82%;background:rgb(var(--p))"></div></div><span class="ca-val" style="color:rgb(var(--p))">82%</span></div>
+        <div class="ca-metric"><span class="ca-label">ANGER DETECTED</span><div class="ca-bar-wrap"><div class="ca-bar" style="width:31%;background:rgb(var(--r))"></div></div><span class="ca-val" style="color:rgb(var(--r))">31%</span></div>
+        <div class="ca-metric"><span class="ca-label">SATISFACTION RESTORED</span><div class="ca-bar-wrap"><div class="ca-bar" style="width:91%;background:rgb(var(--g))"></div></div><span class="ca-val" style="color:rgb(var(--g))">91%</span></div>
+      </div>
+      <div style="margin-top:16px;padding:12px;border-radius:10px;background:rgba(var(--g),.06);border:1px solid rgba(var(--g),.18)">
+        <div style="font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--g),.7);margin-bottom:4px">AVG RESOLUTION TIME</div>
+        <div style="font-family:'Orbitron',monospace;font-size:26px;font-weight:900;color:rgb(var(--g))">1.8s</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.3);font-family:'Share Tech Mono',monospace;margin-top:3px">vs 4.2 minutes with human agents</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- SECTION 7: AVAILABILITY PREDICTION -->
+<div class="section">
+  <p class="section-tag">◈ CUSTOMER AVAILABILITY PREDICTION AI · SECTION 07</p>
+  <h2 class="section-title">Behavioral Delivery Intelligence</h2>
+  <p class="section-sub">AI learns every customer's habits, predicts availability, and suggests optimal delivery windows — preventing missed deliveries before they happen.</p>
+  <div class="avail-grid" id="avail-grid"></div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- SECTION 8: INCIDENT LOG -->
+<div class="section">
+  <p class="section-tag">◈ REAL-TIME INCIDENT PANEL · SECTION 08</p>
+  <h2 class="section-title">Customer AI Live Operations</h2>
+  <p class="section-sub">Every autonomous action logged in real time. Zero human approvals. Zero human escalations.</p>
+  <div style="border-radius:16px;background:rgba(0,0,8,.96);border:1px solid rgba(var(--p),.22);overflow:hidden;box-shadow:0 0 60px rgba(var(--p),.08)">
+    <div class="term-header">
+      <div class="term-dot" style="background:#ff5f57"></div>
+      <div class="term-dot" style="background:#ffbd2e"></div>
+      <div class="term-dot" style="background:#28c840"></div>
+      <span class="term-title">customer-ai — autonomous_ops_stream — live</span>
+      <div style="margin-left:auto" class="live-badge lb-p"><div class="status-dot pulse-p"></div>STREAMING</div>
+    </div>
+    <div id="term-body"></div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- SECTION 9: ANALYTICS DASHBOARD -->
+<div class="section">
+  <p class="section-tag">◈ CUSTOMER AI ANALYTICS · SECTION 09</p>
+  <h2 class="section-title">Autonomous Operations Dashboard</h2>
+  <p class="section-sub">Every metric tracked, analyzed, and optimized in real time by AI with no human oversight required.</p>
+  <div class="analytics-grid">
+    <div class="ana-card ana-p"><div class="ana-icon">📞</div><div class="ana-val" style="color:rgb(var(--p))" id="an-calls">10,847</div><div class="ana-lbl">CALLS COMPLETED</div><div class="ana-change">▲ +234 this hour</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-calls"></canvas></div></div>
+    <div class="ana-card ana-g"><div class="ana-icon">🚫</div><div class="ana-val" style="color:rgb(var(--g))" id="an-failed">1,312</div><div class="ana-lbl">FAILURES PREVENTED</div><div class="ana-change">▲ +14 last minute</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-failed"></canvas></div></div>
+    <div class="ana-card ana-c"><div class="ana-icon">📉</div><div class="ana-val" style="color:rgb(var(--c))">-67%</div><div class="ana-lbl">COMPLAINT REDUCTION</div><div class="ana-change">▲ vs baseline</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-complaints"></canvas></div></div>
+    <div class="ana-card ana-y"><div class="ana-icon">🔐</div><div class="ana-val" style="color:rgb(var(--y))">98.7%</div><div class="ana-lbl">OTP SUCCESS RATE</div><div class="ana-change">▲ +0.3% today</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-otp"></canvas></div></div>
+    <div class="ana-card ana-o"><div class="ana-icon">⚡</div><div class="ana-val" style="color:rgb(var(--o))">0.8s</div><div class="ana-lbl">AI RESPONSE SPEED</div><div class="ana-change">▼ −1.4s vs avg</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-speed"></canvas></div></div>
+    <div class="ana-card ana-p"><div class="ana-icon">🎯</div><div class="ana-val" style="color:rgb(var(--p))">99.1%</div><div class="ana-lbl">COMM ACCURACY</div><div class="ana-change">▲ AI self-improved</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-accuracy"></canvas></div></div>
+    <div class="ana-card ana-g"><div class="ana-icon">😊</div><div class="ana-val" style="color:rgb(var(--g))">96.4%</div><div class="ana-lbl">CSAT PREDICTION SCORE</div><div class="ana-change">▲ trending up</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-csat"></canvas></div></div>
+    <div class="ana-card ana-c"><div class="ana-icon">💰</div><div class="ana-val" style="color:rgb(var(--c))">₹84K</div><div class="ana-lbl">REATTEMPT COST SAVED</div><div class="ana-change">▲ +₹1.2K this hour</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-saved"></canvas></div></div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- SECTION 10: SELF-LEARNING -->
+<div class="section">
+  <p class="section-tag">◈ AI SELF-LEARNING ENGINE · SECTION 10</p>
+  <h2 class="section-title">Continuous Intelligence Evolution</h2>
+  <p class="section-sub">AI learns from every interaction. Every call, complaint, and delivery makes it smarter — autonomously.</p>
+  <div class="learning-grid">
+    <div class="learn-card"><div class="neural-pulse"></div><div class="learn-icon">🧠</div><div class="learn-title">PREDICTION ACCURACY</div><div class="learn-val" style="color:rgb(var(--p))" id="learn-acc">99.1%</div><div class="learn-sub">Improved from 91.2% → 30 days ago</div></div>
+    <div class="learn-card"><div class="neural-pulse" style="animation-delay:.8s"></div><div class="learn-icon">📊</div><div class="learn-title">PATTERNS LEARNED</div><div class="learn-val" style="color:rgb(var(--c))" id="learn-patterns">48,291</div><div class="learn-sub">Customer behavior models · Self-updating</div></div>
+    <div class="learn-card"><div class="neural-pulse" style="animation-delay:1.6s"></div><div class="learn-icon">⚡</div><div class="learn-title">RESPONSE OPTIMIZATION</div><div class="learn-val" style="color:rgb(var(--g))">-67%</div><div class="learn-sub">Faster resolutions vs. week 1 baseline</div></div>
+  </div>
+  <div class="learn-banner">
+    <div class="lb-icon">🔮</div>
+    <div class="lb-text" id="learn-banner-text">
+      <span class="lb-highlight">NEW:</span> AI customer prediction accuracy improved to <span class="lb-highlight">99.1%</span> — 847 new behavioral patterns detected this hour.
+      <br>Self-optimizing communication scripts updated across 12 languages.
+      <br><span style="color:rgba(255,255,255,.35)">Next learning cycle in 00:04:12 · No human input required</span>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<div id="footer">
+  <div class="footer-logo">🎙 CUSTOMER AI · AUTONOMOUS ENGINE</div>
+  <div class="footer-sub">PART OF META-AI CEO OS · v5.0.2 · ZERO HUMAN AGENTS REQUIRED</div>
+  <div class="footer-stats">
+    <div class="f-stat"><div class="status-dot pulse-p"></div><span>CALLS TODAY: <span id="footer-calls">10,847</span></span></div>
+    <div class="f-stat"><div class="status-dot pulse-g"></div><span>COMPLAINTS RESOLVED: <span id="footer-resolved">1,204</span></span></div>
+    <div class="f-stat"><div class="status-dot pulse-c"></div><span>OTP VERIFICATIONS: 4,291</span></div>
+    <div class="f-stat"><div class="status-dot" style="background:rgb(var(--y));box-shadow:0 0 8px rgb(var(--y));animation:pulse-dot 1.5s ease-in-out infinite .6s"></div><span>HUMAN AGENTS NEEDED: ZERO</span></div>
+  </div>
+</div>
+
+<script>
+/* ===== HERO CANVAS ===== */
+(function(){
+  const cv=document.getElementById('hero-canvas');
+  const ctx=cv.getContext('2d');
+  let W,H,pts=[];
+  function resize(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;
+    pts=Array.from({length:80},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.6+.4,alpha:Math.random()*.5+.2}));}
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<110){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(139,92,246,${.1*(1-d/110)})`;ctx.lineWidth=.6;ctx.stroke();}}));
+    pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(139,92,246,${p.alpha})`;ctx.fill();});
+    requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+})();
+
+/* ===== NAV CLOCK ===== */
+function updateClock(){const el=document.getElementById('nav-time');if(el)el.textContent=new Date().toLocaleTimeString('en-US',{hour12:false});}
+setInterval(updateClock,1000);updateClock();
+
+/* ===== HERO CYCLE ===== */
+const cycleTexts=['CALLING CUSTOMERS · VERIFYING DELIVERIES · RESOLVING COMPLAINTS AUTONOMOUSLY','PREDICTING AVAILABILITY · PREVENTING FAILED DELIVERIES · ZERO HUMAN AGENTS','OTP VERIFICATION · FRAUD PREVENTION · SECURE DELIVERY CONFIRMATION','AI VOICE ENGINE · SENTIMENT ANALYSIS · COMPLAINT AUTO-RESOLUTION'];
+let cycleIdx=0;const heroCycle=document.getElementById('hero-cycle');
+setInterval(()=>{cycleIdx=(cycleIdx+1)%cycleTexts.length;if(heroCycle){heroCycle.style.opacity='0';setTimeout(()=>{heroCycle.textContent=cycleTexts[cycleIdx];heroCycle.style.opacity='1';},300);}},4000);
+
+/* ===== HERO STATS ===== */
+setInterval(()=>{
+  const calls=document.getElementById('stat-calls');if(calls)calls.textContent=Math.round(820+Math.random()*60);
+  const prev=document.getElementById('stat-prevented');if(prev)prev.textContent=Math.round(300+Math.random()*30);
+  const res=document.getElementById('stat-resolved');const rv=parseInt((res?.textContent||'1204').replace(',',''))+Math.floor(Math.random()*3);if(res)res.textContent=rv.toLocaleString();
+  const saved=document.getElementById('stat-saved');const sv=parseInt((saved?.textContent||'84000').replace(/[₹K]/g,''))*1000;if(saved)saved.textContent='₹'+(Math.round((sv+Math.random()*200)/1000))+'K';
+},2000);
+
+/* ===== VOICE WAVE ===== */
+(function(){
+  const wrap=document.getElementById('voice-wave');if(!wrap)return;
+  for(let i=0;i<28;i++){const b=document.createElement('div');b.className='wave-bar';b.style.animationDuration=(0.4+Math.random()*0.8)+'s';b.style.animationDelay=(Math.random()*0.6)+'s';b.style.height=(Math.random()*30+8)+'px';wrap.appendChild(b);}
+})();
+
+/* ===== CALL TIMELINE ===== */
+const callTimeline=[
+  {t:'14:22:01',txt:'AI call initiated to Priya Sharma',c:'rgba(139,92,246,1)'},
+  {t:'14:22:03',txt:'Customer answered · Language: Hindi',c:'rgba(0,245,255,1)'},
+  {t:'14:22:05',txt:'AI voice message delivered',c:'rgba(0,255,157,1)'},
+  {t:'14:22:08',txt:'Customer pressed [1] — AVAILABLE',c:'rgba(0,255,157,1)'},
+  {t:'14:22:09',txt:'Rider ETA confirmed · Fleet AI notified',c:'rgba(255,210,0,1)'},
+];
+const tlWrap=document.getElementById('call-timeline');
+if(tlWrap){callTimeline.forEach(e=>{const d=document.createElement('div');d.className='ct-item';d.innerHTML=`<div class="ct-dot" style="background:${e.c}"></div><span class="ct-time">${e.t}</span><span class="ct-txt">${e.txt}</span>`;tlWrap.appendChild(d);});}
+
+/* ===== CALL CUSTOMERS ROTATION ===== */
+const callNames=['PRIYA SHARMA','AMIT VERMA','KAVYA NAIR','ROHIT SINGH','SNEHA PATEL','ARJUN REDDY','DIVYA KUMAR','SURESH BABU'];
+const ivrMsgs=[
+  '"Hello {name}, your delivery will arrive in 7 minutes. Your rider Rahul is on the way."',
+  '"Hi {name}, this is a reminder — your package is 2.1 km away. ETA: 6 minutes."',
+  '"Good evening {name}. Your order is out for delivery. Please be available."',
+  '"{name}, your rider is nearby. Press 1 to confirm, 2 to reschedule, 3 for doorstep drop."',
+];
+let nameIdx=0;
+setInterval(()=>{
+  nameIdx=(nameIdx+1)%callNames.length;
+  const n=document.getElementById('call-customer-name');const s=document.getElementById('call-sub-status');const iv=document.getElementById('ivr-msg');
+  if(n)n.textContent='CALLING: '+callNames[nameIdx];
+  if(s){let sec=0;const t=setInterval(()=>{sec++;s.textContent='AI VOICE ASSISTANT · ACTIVE CALL · 00:'+String(sec).padStart(2,'0');if(sec>30)clearInterval(t);},1000);}
+  if(iv){const msg=ivrMsgs[nameIdx%ivrMsgs.length].replace('{name}',callNames[nameIdx].split(' ')[0]);iv.textContent=msg;}
+},8000);
+
+/* ===== CALL METRICS ===== */
+setInterval(()=>{
+  ['ci-cpm','ci-avail','ci-resc','ci-redir'].forEach((id,i)=>{
+    const el=document.getElementById(id);if(!el)return;
+    if(i===0)el.textContent=Math.round(12+Math.random()*5);
+    else if(i===1)el.textContent=Math.round(85+Math.random()*10)+'%';
+    else if(i===2)el.textContent=Math.round(18+Math.random()*12);
+    else el.textContent=Math.round(8+Math.random()*8);
+  });
+},2200);
+
+/* ===== NOTIFICATION STREAM ===== */
+const NOTIFS=[
+  {icon:'🛵',title:'Rider Arriving Soon',msg:'Your rider Rahul is 3 minutes away — order #44821',badge:'nb-cyan',btext:'ETA UPDATE'},
+  {icon:'🔐',title:'OTP Sent',msg:'Your delivery OTP: 8 4 7 2 3 1 — valid for 30 seconds',badge:'nb-purple',btext:'SECURE OTP'},
+  {icon:'✅',title:'Delivery Completed',msg:'Order #44821 delivered successfully at 2:24 PM',badge:'nb-green',btext:'DELIVERED'},
+  {icon:'⚠️',title:'Traffic Delay Detected',msg:'ETA updated by 4 minutes — Outer Ring Road congestion',badge:'nb-orange',btext:'DELAY ALERT'},
+  {icon:'📦',title:'Order Confirmed',msg:'Your order #44822 has been confirmed and is being packed',badge:'nb-cyan',btext:'CONFIRMED'},
+  {icon:'💸',title:'Payment Confirmed',msg:'₹1,240 received via UPI · Transaction #TXN-9921',badge:'nb-green',btext:'PAID'},
+  {icon:'📅',title:'Reschedule Confirmed',msg:'Delivery rescheduled to tomorrow 3:00–5:00 PM slot',badge:'nb-purple',btext:'RESCHEDULED'},
+  {icon:'🚨',title:'Emergency Alert',msg:'Rider SOS triggered — backup dispatched automatically',badge:'nb-red',btext:'EMERGENCY'},
+];
+let notifCount=48291;
+function addNotif(){
+  const stream=document.getElementById('notif-stream');if(!stream)return;
+  const n=NOTIFS[Math.floor(Math.random()*NOTIFS.length)];
+  const now=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const card=document.createElement('div');
+  card.className='notif-card glass';
+  card.style.background='rgba(var(--c),.02)';card.style.border='1px solid rgba(var(--c),.12)';
+  card.innerHTML=`<div class="notif-icon-wrap" style="background:rgba(var(--c),.08);border:1px solid rgba(var(--c),.2)">${n.icon}</div><div class="notif-body"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div class="notif-title">${n.title}</div><div class="notif-msg">${n.msg}</div></div><div class="notif-badge ${n.badge}">${n.btext}</div></div><div class="notif-time">${now}</div></div>`;
+  stream.insertBefore(card,stream.firstChild);
+  while(stream.children.length>8)stream.removeChild(stream.lastChild);
+  notifCount+=Math.floor(Math.random()*3+1);
+  const nc=document.getElementById('notif-count');if(nc)nc.textContent=notifCount.toLocaleString();
+}
+for(let i=0;i<5;i++)setTimeout(()=>addNotif(),i*300);
+setInterval(addNotif,2800);
+
+/* ===== OTP ENGINE ===== */
+let otpTimer=30;
+const timerFg=document.getElementById('timer-fg');
+const timerNum=document.getElementById('timer-num');
+const timerText=document.getElementById('timer-text');
+const circumference=100.53;
+function generateOTP(){
+  const digits=Array.from({length:6},()=>Math.floor(Math.random()*10));
+  const els=document.getElementById('otp-digits')?.querySelectorAll('.otp-digit');
+  if(!els)return;
+  els.forEach((el,i)=>{el.classList.remove('verified');setTimeout(()=>{el.textContent=digits[i];el.style.animation='none';el.offsetHeight;el.style.animation='msg-in .3s ease';},i*120);});
+  setTimeout(()=>{els.forEach(el=>el.classList.add('verified'));const st=document.getElementById('otp-status');if(st)st.textContent='✅ OTP VERIFIED · DELIVERY CONFIRMED · PAYMENT RELEASED';},2200);
+  otpTimer=30;
+}
+setInterval(()=>{
+  otpTimer--;if(otpTimer<=0){generateOTP();return;}
+  if(timerNum)timerNum.textContent=otpTimer;
+  if(timerText)timerText.textContent=otpTimer;
+  if(timerFg){const offset=circumference*(1-otpTimer/30);timerFg.style.strokeDashoffset=offset;}
+  if(otpTimer===5){const st=document.getElementById('otp-status');if(st)st.textContent='⚠️ OTP EXPIRING SOON — REGENERATING...';}
+},1000);
+generateOTP();
+
+/* OTP Steps */
+const otpStepsDef=[
+  {num:'1',title:'Rider reached customer location',sub:'GPS confirmed · 12.9°N 77.6°E',state:'step-done'},
+  {num:'2',title:'OTP generated & sent to customer',sub:'SMS + WhatsApp · Encrypted 256-bit',state:'step-active'},
+  {num:'3',title:'Customer sharing OTP with rider',sub:'Awaiting input...',state:'step-pending'},
+  {num:'4',title:'Rider verification pending',sub:'Standby',state:'step-pending'},
+  {num:'5',title:'AI confirms delivery',sub:'Auto-triggers Payment AI',state:'step-pending'},
+];
+const otpList=document.getElementById('otp-steps-list');
+if(otpList){otpStepsDef.forEach(s=>{const d=document.createElement('div');d.className='otp-step';d.innerHTML=`<div class="step-num ${s.state}">${s.num}</div><div><div class="step-title">${s.title}</div><div class="step-sub">${s.sub}</div></div>`;otpList.appendChild(d);});}
+
+/* ===== CHATBOT ===== */
+const chatConvos={
+  'Where is my order?':{ai:"Your rider Rahul is 2.1 km away and will arrive in approximately 6 minutes. Live tracking: 12.9451°N, 77.6207°E. Order #44821."},
+  'I want to reschedule':{ai:"No problem! Based on your availability patterns, I suggest tomorrow between 2:00–4:00 PM or 6:00–8:00 PM. Which slot works for you?"},
+  'I have a complaint':{ai:"I'm sorry to hear that! I've detected your concern and escalated priority. A compensation coupon (₹50 off) has been auto-applied to your account. Can you share more details?"},
+  'Request refund':{ai:"I've initiated your refund request. Based on order analysis, ₹1,240 refund is approved. You'll receive it in 2–4 business hours via your original payment method."},
+  'default':{ai:"I understand your concern. Let me check your order details... Your order #44821 is currently 2.1 km away from your location. Is there anything specific I can help you with?"}
+};
+function addMsg(text,isUser){
+  const msgs=document.getElementById('chat-messages');if(!msgs)return;
+  const div=document.createElement('div');div.className='msg '+(isUser?'msg-user':'msg-ai');
+  const time=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+  div.innerHTML=`<div class="msg-bubble">${text}</div><div class="msg-time">${time}</div>`;
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+function showTyping(){
+  const msgs=document.getElementById('chat-messages');if(!msgs)return;
+  const div=document.createElement('div');div.className='msg msg-ai';div.id='typing-indicator';
+  div.innerHTML=`<div class="msg-bubble typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+function removeTyping(){const t=document.getElementById('typing-indicator');if(t)t.remove();}
+window.sendUserMsg=function(text){
+  addMsg(text,true);
+  showTyping();
+  const resp=chatConvos[text]||chatConvos['default'];
+  setTimeout(()=>{removeTyping();addMsg(resp.ai,false);},900+Math.random()*600);
+};
+// Initial greeting
+setTimeout(()=>{addMsg('Hi! I\'m your Customer AI assistant. I can track your order, reschedule delivery, handle complaints, and more — instantly, 24/7.',false);},600);
+
+/* ===== COMPLAINT STREAM ===== */
+const COMPLAINTS=[
+  {emoji:'😡',title:'Customer angry — Late delivery (32 min)',res:'→ Apology sent + ₹40 coupon auto-generated',badge:'AUTO-RESOLVED'},
+  {emoji:'😤',title:'Wrong item delivered — Koramangala',res:'→ Refund ₹890 initiated + replacement dispatched',badge:'AUTO-RESOLVED'},
+  {emoji:'😢',title:'Delivery marked done but not received',res:'→ Fraud flag raised · Rider geo-audit triggered',badge:'ESCALATED',esc:true},
+  {emoji:'😠',title:'Rider was rude to customer',res:'→ Rider flagged · Customer apology + ₹30 credit',badge:'AUTO-RESOLVED'},
+  {emoji:'🤔',title:'OTP expired before delivery',res:'→ New OTP regenerated · Rider alerted to wait',badge:'AUTO-RESOLVED'},
+  {emoji:'😡',title:'Package damaged during delivery',res:'→ Claim raised · Replacement + refund initiated',badge:'AUTO-RESOLVED'},
+];
+function addComplaint(){
+  const stream=document.getElementById('complaint-stream');if(!stream)return;
+  const c=COMPLAINTS[Math.floor(Math.random()*COMPLAINTS.length)];
+  const item=document.createElement('div');item.className='complaint-item';
+  item.innerHTML=`<div class="ci-sentiment">${c.emoji}</div><div class="ci-content"><div class="ci-title">${c.title}</div><div class="ci-resolution">${c.res}</div><div class="ci-badge${c.esc?' escalated':''}">${c.badge}</div></div>`;
+  stream.insertBefore(item,stream.firstChild);
+  while(stream.children.length>12)stream.removeChild(stream.lastChild);
+}
+for(let i=0;i<6;i++)setTimeout(()=>addComplaint(),i*200);
+setInterval(addComplaint,3200);
+
+/* ===== AVAILABILITY PREDICTION ===== */
+const availCustomers=[
+  {name:'Priya Sharma',conf:94,color:'rgb(0,255,157)',window:'2:00–4:00 PM',learning:'Prefers afternoon slots'},
+  {name:'Amit Verma',conf:78,color:'rgb(0,245,255)',window:'6:00–8:00 PM',learning:'Usually home after work'},
+  {name:'Kavya Nair',conf:88,color:'rgb(139,92,246)',window:'11:00–1:00 PM',learning:'Work-from-home pattern'},
+  {name:'Rohit Singh',conf:62,color:'rgb(255,210,0)',window:'9:00–11:00 AM',learning:'Weekend mornings best'},
+  {name:'Sneha Patel',conf:96,color:'rgb(0,255,157)',window:'3:00–5:00 PM',learning:'Consistent home timing'},
+  {name:'Arjun Reddy',conf:71,color:'rgb(255,107,53)',window:'7:00–9:00 PM',learning:'Evening delivery best'},
+];
+const availGrid=document.getElementById('avail-grid');
+if(availGrid){availCustomers.forEach(c=>{
+  const r=125.66;const circ=r;
+  const card=document.createElement('div');card.className='avail-card glass';
+  card.innerHTML=`
+    <div class="avail-name">CUSTOMER PROFILE</div>
+    <div class="avail-cust">${c.name}</div>
+    <div class="conf-ring">
+      <svg class="conf-svg" viewBox="0 0 50 50">
+        <circle class="conf-bg" cx="25" cy="25" r="20"/>
+        <circle class="conf-fg" cx="25" cy="25" r="20" stroke="${c.color}" stroke-dasharray="125.66" stroke-dashoffset="${125.66*(1-c.conf/100)}"/>
+      </svg>
+      <div class="conf-num" style="color:${c.color}">${c.conf}%</div>
+    </div>
+    <div class="avail-window">BEST WINDOW: ${c.window}</div>
+    <div class="avail-learning">🧠 ${c.learning}</div>
+  `;
+  availGrid.appendChild(card);
+});}
+setInterval(()=>{
+  const rings=availGrid?.querySelectorAll('.conf-fg');
+  rings?.forEach(r=>{const current=parseFloat(r.style.strokeDashoffset||0);const delta=(Math.random()-.5)*3;r.style.strokeDashoffset=Math.max(0,Math.min(120,current+delta));});
+},2000);
+
+/* ===== INCIDENT LOG ===== */
+const LOGS=[
+  {src:'[CUSTOMER AI]',cls:'log-src-main',msgs:['→ Customer unavailable detected — retry in 4 min','→ Complaint #C-4421 auto-resolved in 1.2s','→ OTP verified successfully · Delivery confirmed','→ Refund prediction triggered: 94% confidence','→ All 14 active calls processed simultaneously']},
+  {src:'[CALL ENGINE]',cls:'log-src-call',msgs:['→ Pre-arrival call placed to Customer #C-9981','→ Language detected: Kannada · Switching voice model','→ Smart retry scheduled — best time: 4:30 PM','→ Emergency contact activated for C-8821','→ IVR response: Customer pressed [1] AVAILABLE']},
+  {src:'[OTP ENGINE]',cls:'log-src-otp',msgs:['→ OTP #847231 generated · 30s expiry set','→ Verification success · Payment AI notified','→ OTP mismatch detected · Fraud flag raised','→ OTP regenerated on expiry · Rider alerted to wait','→ 56 fraud attempts blocked today']},
+  {src:'[COMPLAINT AI]',cls:'log-src-comp',msgs:['→ Anger detected in voice tone — priority escalated','→ Compensation coupon ₹50 auto-generated','→ Customer satisfaction restored — score: 4.8/5','→ Complaint resolved 140x faster than human average','→ Sentiment: NEUTRAL → POSITIVE in 2.1s']},
+  {src:'[AVAIL AI]',cls:'log-src-avail',msgs:['→ New pattern learned: Amit prefers 6–8 PM','→ Missed delivery risk: 34% · Proactive call initiated','→ Best delivery window updated for 128 customers','→ Prediction accuracy improved: 98.4% → 99.1%']},
+];
+const termBody=document.getElementById('term-body');
+function addLog(){
+  const entry=LOGS[Math.floor(Math.random()*LOGS.length)];
+  const msg=entry.msgs[Math.floor(Math.random()*entry.msgs.length)];
+  const time=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const line=document.createElement('div');line.className='log-line';
+  line.innerHTML=`<span class="log-time">[${time}]</span><span class="${entry.cls}">${entry.src}</span><span class="log-msg"> ${msg}</span>`;
+  termBody.appendChild(line);
+  if(termBody.children.length>60)termBody.removeChild(termBody.firstChild);
+  termBody.scrollTop=termBody.scrollHeight;
+}
+for(let i=0;i<10;i++)addLog();
+setInterval(addLog,1100);
+const cur=document.createElement('div');cur.className='log-line';
+cur.innerHTML='<span class="log-src-main">▸</span><span class="cursor-blink"></span>';termBody.appendChild(cur);
+
+/* ===== SPARKLINES ===== */
+const SPARK_IDS={
+  'sp-calls':'rgba(139,92,246,','sp-failed':'rgba(0,255,157,','sp-complaints':'rgba(0,245,255,',
+  'sp-otp':'rgba(255,210,0,','sp-speed':'rgba(255,107,53,','sp-accuracy':'rgba(139,92,246,',
+  'sp-csat':'rgba(0,255,157,','sp-saved':'rgba(0,245,255,'
+};
+const sparkData={};
+Object.keys(SPARK_IDS).forEach(id=>{sparkData[id]=Array.from({length:20},()=>Math.random()*40+60);});
+function drawSparklines(){
+  Object.entries(SPARK_IDS).forEach(([id,col])=>{
+    const cv=document.getElementById(id);if(!cv)return;
+    const ctx=cv.getContext('2d');const W=cv.width=cv.offsetWidth||150;const H=cv.height=cv.offsetHeight||30;
+    ctx.clearRect(0,0,W,H);
+    const data=sparkData[id];const min=Math.min(...data),max=Math.max(...data);
+    const step=W/(data.length-1);
+    ctx.beginPath();
+    data.forEach((v,i)=>{const x=i*step,y=H-(v-min)/(max-min||1)*(H*.7)-(H*.15);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.strokeStyle=col+'1)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+    const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,col+'.25)');g.addColorStop(1,col+'0)');
+    ctx.fillStyle=g;ctx.fill();
+  });
+}
+setInterval(()=>{Object.keys(sparkData).forEach(id=>{sparkData[id].shift();sparkData[id].push(Math.random()*40+60);});drawSparklines();},1500);
+setTimeout(drawSparklines,200);
+
+/* ===== ANALYTICS LIVE UPDATE ===== */
+setInterval(()=>{
+  const callsEl=document.getElementById('an-calls');if(callsEl){const v=parseInt(callsEl.textContent.replace(',',''))+Math.floor(Math.random()*4+1);callsEl.textContent=v.toLocaleString();}
+  const failedEl=document.getElementById('an-failed');if(failedEl){const v=parseInt(failedEl.textContent.replace(',',''))+Math.floor(Math.random()*2);failedEl.textContent=v.toLocaleString();}
+},2000);
+
+/* ===== FOOTER COUNTERS ===== */
+let fCalls=10847,fResolved=1204;
+setInterval(()=>{
+  fCalls+=Math.floor(Math.random()*3+1);fResolved+=Math.floor(Math.random()*2);
+  const fc=document.getElementById('footer-calls');if(fc)fc.textContent=fCalls.toLocaleString();
+  const fr=document.getElementById('footer-resolved');if(fr)fr.textContent=fResolved.toLocaleString();
+},1800);
+
+/* ===== LEARNING COUNTER ===== */
+let learnPatterns=48291;
+setInterval(()=>{learnPatterns+=Math.floor(Math.random()*5+2);const el=document.getElementById('learn-patterns');if(el)el.textContent=learnPatterns.toLocaleString();},2500);
+
+/* ===== LEARN ACCURACY JITTER ===== */
+setInterval(()=>{const el=document.getElementById('learn-acc');if(el)el.textContent=(99+Math.random()*0.9).toFixed(1)+'%';},3000);
+</script>
+</body>
+</html>

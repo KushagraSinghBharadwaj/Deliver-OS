@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>GTI Fleet AI — Smart Dispatch AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--c:0,245,255;--p:139,92,246;--g:0,255,157;--y:255,210,0;--r:255,45,85;--o:255,107,53;--bg:#00000a}
+body{background:var(--bg);color:#fff;font-family:'Exo 2',sans-serif;overflow-x:hidden;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:9999}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.6)}}
+@keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes glow-sweep{0%{left:-100%}100%{left:200%}}
+@keyframes slideup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+#nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:10px 24px;background:rgba(0,0,10,.95);border-bottom:1px solid rgba(var(--c),.14);backdrop-filter:blur(20px)}
+.nav-brand{display:flex;align-items:center;gap:12px}
+.nav-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,rgb(var(--c)),rgb(var(--p)));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-sub{font-size:8px;color:rgba(var(--c),.5);font-family:'Share Tech Mono',monospace;letter-spacing:2px;margin-top:2px}
+.nav-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1.5px}
+.status-dot{width:7px;height:7px;border-radius:50%;animation:pulse-dot 1.4s ease-in-out infinite;flex-shrink:0}
+.dot-c{background:rgb(var(--c));box-shadow:0 0 8px rgb(var(--c))}
+.dot-g{background:rgb(var(--g));box-shadow:0 0 8px rgb(var(--g))}
+#nav-clock{font-size:9px;color:rgba(255,255,255,.3);font-family:'Share Tech Mono',monospace}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--c),.7);text-decoration:none;letter-spacing:1.5px;padding:4px 12px;border:1px solid rgba(var(--c),.25);border-radius:20px;transition:all .2s;cursor:pointer;background:none}
+.back-link:hover{color:rgb(var(--c));border-color:rgba(var(--c),.6);box-shadow:0 0 14px rgba(var(--c),.2)}
+#hero{position:relative;padding:40px 24px 32px;text-align:center;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(var(--c),.07) 0%,transparent 70%)}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero-inner{position:relative;z-index:2}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;padding:5px 18px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgb(var(--c));background:rgba(var(--c),.07);border:1px solid rgba(var(--c),.3);margin-bottom:14px}
+.hero-title{font-family:'Orbitron',monospace;font-size:clamp(28px,4vw,52px);font-weight:900;letter-spacing:5px;background:linear-gradient(135deg,#fff 0%,rgb(var(--c)) 50%,rgb(var(--p)) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.hero-sub{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:4px;margin-bottom:24px}
+.hero-metrics{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.h-metric{padding:12px 18px;background:rgba(255,255,255,.03);border:1px solid rgba(var(--c),.18);border-radius:12px;text-align:center;min-width:110px}
+.h-metric-val{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:rgb(var(--c))}
+.h-metric-lbl{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-top:3px}
+.glow-div{height:1px;background:linear-gradient(90deg,transparent,rgba(var(--c),.4),rgba(var(--p),.4),transparent)}
+.section{padding:28px 20px;max-width:1400px;margin:0 auto}
+.sec-tag{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgba(var(--c),.7);margin-bottom:6px}
+.sec-title{font-family:'Orbitron',monospace;font-size:clamp(15px,2.2vw,22px);font-weight:700;color:#fff;margin-bottom:4px}
+.sec-sub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:22px}
+/* DISPATCH QUEUE */
+.dispatch-grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+@media(max-width:1000px){.dispatch-grid{grid-template-columns:1fr}}
+.order-queue{display:flex;flex-direction:column;gap:10px}
+.order-card{background:rgba(3,2,15,.92);border:1px solid rgba(var(--c),.18);border-radius:14px;padding:16px;position:relative;overflow:hidden;animation:slideup .4s ease both;transition:transform .2s,box-shadow .2s}
+.order-card:hover{transform:translateY(-2px);box-shadow:0 0 24px rgba(var(--c),.15)}
+.order-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--c)),transparent)}
+.order-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.order-id{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:rgb(var(--c));letter-spacing:2px}
+.order-badge{padding:3px 10px;border-radius:20px;font-size:8px;font-family:'Share Tech Mono',monospace;letter-spacing:1.5px}
+.badge-dispatched{background:rgba(var(--g),.12);color:rgb(var(--g));border:1px solid rgba(var(--g),.4)}
+.badge-routing{background:rgba(var(--c),.12);color:rgb(var(--c));border:1px solid rgba(var(--c),.4)}
+.badge-priority{background:rgba(var(--r),.12);color:rgb(var(--r));border:1px solid rgba(var(--r),.4)}
+.badge-queue{background:rgba(var(--y),.12);color:rgb(var(--y));border:1px solid rgba(var(--y),.4)}
+.order-details{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.od-item{background:rgba(255,255,255,.03);border-radius:8px;padding:7px 10px}
+.od-val{font-family:'Share Tech Mono',monospace;font-size:11px;color:#fff}
+.od-lbl{font-size:8px;color:rgba(255,255,255,.3);letter-spacing:.8px;margin-top:1px}
+.order-rider{display:flex;align-items:center;gap:10px;background:rgba(var(--g),.05);border:1px solid rgba(var(--g),.15);border-radius:8px;padding:8px 12px}
+.rider-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,rgba(var(--c),.3),rgba(var(--p),.3));border:1px solid rgba(var(--c),.4);display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'Orbitron',monospace;color:rgb(var(--c));font-weight:700;flex-shrink:0}
+.rider-info{flex:1}
+.rider-name-sm{font-size:10px;color:rgba(255,255,255,.8);font-weight:600}
+.rider-stat-row{display:flex;gap:12px;margin-top:2px}
+.rider-stat{font-size:8px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.4)}
+.rider-stat span{color:rgb(var(--g))}
+.ai-tag{font-size:8px;font-family:'Share Tech Mono',monospace;color:rgba(var(--c),.7);background:rgba(var(--c),.08);padding:2px 8px;border-radius:10px;border:1px solid rgba(var(--c),.2)}
+/* RIGHT PANEL */
+.right-panel{display:flex;flex-direction:column;gap:14px}
+.panel-box{background:rgba(3,2,15,.9);border:1px solid rgba(var(--c),.18);border-radius:14px;padding:16px;position:relative;overflow:hidden}
+.panel-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--c)),transparent)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-card{background:rgba(255,255,255,.03);border-radius:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.06);text-align:center}
+.stat-val{font-family:'Orbitron',monospace;font-size:20px;font-weight:700}
+.stat-lbl{font-size:8px;color:rgba(255,255,255,.3);letter-spacing:1px;margin-top:3px}
+/* RIDER POOL */
+.rider-pool{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rp-card{background:rgba(255,255,255,.03);border-radius:10px;padding:10px;border:1px solid rgba(var(--c),.12);text-align:center;position:relative;overflow:hidden}
+.rp-card.available{border-color:rgba(var(--g),.3)}
+.rp-card.busy{border-color:rgba(var(--y),.3)}
+.rp-id{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:rgb(var(--c))}
+.rp-name{font-size:9px;color:rgba(255,255,255,.6);margin:3px 0}
+.rp-eff{font-size:9px;font-family:'Share Tech Mono',monospace}
+.rp-status{font-size:8px;font-family:'Share Tech Mono',monospace;margin-top:4px;padding:2px 6px;border-radius:10px;display:inline-block}
+.rp-status.av{background:rgba(var(--g),.15);color:rgb(var(--g));border:1px solid rgba(var(--g),.3)}
+.rp-status.bz{background:rgba(var(--y),.15);color:rgb(var(--y));border:1px solid rgba(var(--y),.3)}
+/* AI LOG */
+.ai-log{background:rgba(0,0,8,.9);border-radius:10px;height:200px;overflow-y:auto;padding:12px;font-family:'Share Tech Mono',monospace;font-size:10px;line-height:1.8;border:1px solid rgba(var(--c),.15)}
+.log-line{display:flex;gap:8px;animation:fadein .25s ease}
+.log-time{color:rgba(255,255,255,.2);min-width:70px;flex-shrink:0}
+/* ALGO PANEL */
+.algo-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:16px}
+.algo-step{background:rgba(3,2,15,.9);border:1px solid rgba(var(--c),.15);border-radius:12px;padding:14px;text-align:center;position:relative}
+.algo-num{width:32px;height:32px;border-radius:50%;background:rgba(var(--c),.12);border:1px solid rgba(var(--c),.35);color:rgb(var(--c));font-family:'Orbitron',monospace;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.algo-name{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:1.5px;color:#fff;margin-bottom:6px}
+.algo-desc{font-size:9px;color:rgba(255,255,255,.45);font-family:'Share Tech Mono',monospace;line-height:1.6}
+.algo-time{font-size:8px;color:rgb(var(--g));font-family:'Share Tech Mono',monospace;margin-top:6px}
+#footer{border-top:1px solid rgba(var(--c),.1);padding:18px 24px;text-align:center;background:rgba(0,0,5,.8);margin-top:40px}
+.footer-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,rgb(var(--c)),rgb(var(--p)));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.footer-sub{font-size:8px;color:rgba(255,255,255,.2);font-family:'Share Tech Mono',monospace;letter-spacing:2px}
+</style>
+</head>
+<body>
+<nav id="nav">
+  <div class="nav-brand">
+    <span style="font-size:20px">🎯</span>
+    <div>
+      <div class="nav-title">SMART DISPATCH AI</div>
+      <div class="nav-sub">RIDER ASSIGNMENT ENGINE — AUTONOMOUS</div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="status-pill"><div class="status-dot dot-c"></div><span style="color:rgba(0,245,255,.7)">DISPATCHING</span></div>
+    <div class="status-pill"><div class="status-dot dot-g" style="animation-delay:.5s"></div><span style="color:rgba(0,255,157,.7)">16 RIDERS LIVE</span></div>
+    <span id="nav-clock"></span>
+    <button class="back-link" onclick="window.location.href='GITfleet.html'">← BACK TO FLEET AI</button>
+  </div>
+</nav>
+
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+    <div class="hero-tag"><div class="status-dot dot-c"></div>AUTONOMOUS RIDER ASSIGNMENT · BANGALORE METRO</div>
+    <h1 class="hero-title">SMART DISPATCH AI</h1>
+    <p class="hero-sub">ZERO HUMAN DISPATCH · AI-ASSIGNED · REAL-TIME OPTIMAL</p>
+    <div class="hero-metrics">
+      <div class="h-metric"><div class="h-metric-val" id="hm-dispatched">847</div><div class="h-metric-lbl">DISPATCHED TODAY</div></div>
+      <div class="h-metric"><div class="h-metric-val" style="color:rgb(var(--g))" id="hm-speed">1.2s</div><div class="h-metric-lbl">AVG ASSIGN TIME</div></div>
+      <div class="h-metric"><div class="h-metric-val" style="color:rgb(var(--y))" id="hm-util">94.2%</div><div class="h-metric-lbl">FLEET UTILIZATION</div></div>
+      <div class="h-metric"><div class="h-metric-val" style="color:rgb(var(--p))">99.1%</div><div class="h-metric-lbl">AI CONFIDENCE</div></div>
+    </div>
+  </div>
+</section>
+<div class="glow-div"></div>
+
+<div class="section">
+  <p class="sec-tag">◈ LIVE DISPATCH QUEUE</p>
+  <h2 class="sec-title">Autonomous Order Assignment Engine</h2>
+  <p class="sec-sub">Every order instantly matched to the optimal rider by AI — zero manual dispatch.</p>
+  <div class="dispatch-grid">
+    <div class="order-queue" id="order-queue"></div>
+    <div class="right-panel">
+      <div class="panel-box">
+        <div class="sec-tag" style="margin-bottom:12px">◈ SYSTEM PULSE</div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-val" style="color:rgb(var(--g))" id="sp-active">12</div><div class="stat-lbl">ACTIVE RIDERS</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:rgb(var(--c))" id="sp-queue">7</div><div class="stat-lbl">IN QUEUE</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:rgb(var(--y))" id="sp-eta">22min</div><div class="stat-lbl">AVG ETA</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:rgb(var(--p))">98.7%</div><div class="stat-lbl">SUCCESS RATE</div></div>
+        </div>
+      </div>
+      <div class="panel-box">
+        <div class="sec-tag" style="margin-bottom:12px">◈ RIDER POOL STATUS</div>
+        <div class="rider-pool" id="rider-pool"></div>
+      </div>
+      <div class="panel-box">
+        <div class="sec-tag" style="margin-bottom:10px">◈ AI DISPATCH LOG</div>
+        <div class="ai-log" id="ai-log"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+<div class="section">
+  <p class="sec-tag">◈ DISPATCH ALGORITHM</p>
+  <h2 class="sec-title">5-Step AI Assignment Logic</h2>
+  <p class="sec-sub">Every assignment runs through this pipeline in under 1.2 seconds.</p>
+  <div class="algo-steps">
+    <div class="algo-step"><div class="algo-num">1</div><div class="algo-name">ORDER INTAKE</div><div class="algo-desc">New order received, parsed, priority scored, delivery window calculated</div><div class="algo-time">≤ 80ms</div></div>
+    <div class="algo-step"><div class="algo-num">2</div><div class="algo-name">RADIUS SCAN</div><div class="algo-desc">All available riders within 5km radius identified and ranked by proximity</div><div class="algo-time">≤ 120ms</div></div>
+    <div class="algo-step"><div class="algo-num">3</div><div class="algo-name">LOAD BALANCE</div><div class="algo-desc">Workload, fatigue score, and current delivery count weighted per rider</div><div class="algo-time">≤ 200ms</div></div>
+    <div class="algo-step"><div class="algo-num">4</div><div class="algo-name">ROUTE OPTIMIZE</div><div class="algo-desc">Optimal path computed using live traffic + multi-drop efficiency model</div><div class="algo-time">≤ 312ms</div></div>
+    <div class="algo-step"><div class="algo-num">5</div><div class="algo-name">AUTO DISPATCH</div><div class="algo-desc">Rider notified, ETA committed, customer updated — zero human intervention</div><div class="algo-time">≤ 500ms</div></div>
+  </div>
+</div>
+
+<div id="footer">
+  <div class="footer-logo">🎯 GTI FLEET AI — SMART DISPATCH MODULE</div>
+  <div class="footer-sub">AUTONOMOUS · 16 RIDERS · REAL-TIME · ZERO HUMAN DISPATCH</div>
+</div>
+
+<script>
+function tick(){document.getElementById('nav-clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});}
+setInterval(tick,1000);tick();
+
+// Hero canvas
+(function(){
+  const cv=document.getElementById('hero-canvas'),ctx=cv.getContext('2d');
+  let pts=[],W,H;
+  function init(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight||200;
+    pts=Array.from({length:40},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*1.4+.3,a:Math.random()*.35+.08}));}
+  function draw(){ctx.clearRect(0,0,W,H);
+    pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<100){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(0,245,255,${.07*(1-d/100)})`;ctx.lineWidth=.5;ctx.stroke();}}));
+    pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(0,245,255,${p.a})`;ctx.fill();});
+    requestAnimationFrame(draw);}
+  window.addEventListener('resize',init);init();draw();
+})();
+
+// Demo orders
+const ORDERS=[
+  {id:'#44892',zone:'Koramangala',items:3,priority:'PRIORITY',rider:'R-04',rName:'Arjun Kumar',eff:94,eta:'6.2 min',dist:'2.4km',status:'DISPATCHED'},
+  {id:'#44893',zone:'Indiranagar',items:1,priority:'ROUTING',rider:'R-11',rName:'Priya Singh',eff:88,eta:'9.1 min',dist:'3.8km',status:'ROUTING'},
+  {id:'#44894',zone:'HSR Layout',items:2,priority:'QUEUE',rider:null,rName:null,eff:null,eta:'—',dist:'—',status:'QUEUE'},
+  {id:'#44895',zone:'Whitefield',items:4,priority:'DISPATCHED',rider:'R-07',rName:'Dev Reddy',eff:91,eta:'14.3 min',dist:'6.1km',status:'DISPATCHED'},
+  {id:'#44896',zone:'Electronic City',items:1,priority:'PRIORITY',rider:'R-02',rName:'Kavya Nair',eff:96,eta:'4.8 min',dist:'1.9km',status:'DISPATCHED'},
+];
+
+const BADGE_MAP={DISPATCHED:'badge-dispatched',ROUTING:'badge-routing',PRIORITY:'badge-priority',QUEUE:'badge-queue'};
+
+function renderOrders(){
+  const q=document.getElementById('order-queue');
+  q.innerHTML='';
+  ORDERS.forEach((o,i)=>{
+    const card=document.createElement('div');card.className='order-card';card.style.animationDelay=(i*.08)+'s';
+    card.innerHTML=`
+      <div class="order-top">
+        <div class="order-id">ORDER ${o.id}</div>
+        <div class="order-badge ${BADGE_MAP[o.status]}">${o.status}</div>
+      </div>
+      <div class="order-details">
+        <div class="od-item"><div class="od-val">${o.zone}</div><div class="od-lbl">ZONE</div></div>
+        <div class="od-item"><div class="od-val">${o.items} items</div><div class="od-lbl">ORDER SIZE</div></div>
+        <div class="od-item"><div class="od-val">${o.eta}</div><div class="od-lbl">ETA</div></div>
+      </div>
+      ${o.rider?`<div class="order-rider">
+        <div class="rider-avatar">${o.rider.replace('R-','')}</div>
+        <div class="rider-info">
+          <div class="rider-name-sm">${o.rName}</div>
+          <div class="rider-stat-row">
+            <div class="rider-stat">RIDER: <span>${o.rider}</span></div>
+            <div class="rider-stat">EFF: <span>${o.eff}%</span></div>
+            <div class="rider-stat">DIST: <span>${o.dist}</span></div>
+          </div>
+        </div>
+        <div class="ai-tag">AI MATCHED</div>
+      </div>`:'<div class="order-rider" style="justify-content:center;color:rgba(255,210,0,.6);font-family:\'Share Tech Mono\',monospace;font-size:10px">⟳ AI SCANNING OPTIMAL RIDER…</div>'}`;
+    q.appendChild(card);
+  });
+}
+renderOrders();
+
+// Rider pool
+const RIDERS=[
+  {id:'R-01',name:'Rahul Das',eff:92,status:'av'},
+  {id:'R-04',name:'Arjun Kumar',eff:94,status:'bz'},
+  {id:'R-07',name:'Dev Reddy',eff:91,status:'bz'},
+  {id:'R-11',name:'Priya Singh',eff:88,status:'bz'},
+  {id:'R-02',name:'Kavya Nair',eff:96,status:'bz'},
+  {id:'R-09',name:'Amit Sharma',eff:85,status:'av'},
+];
+const pool=document.getElementById('rider-pool');
+RIDERS.forEach(r=>{
+  const d=document.createElement('div');d.className=`rp-card ${r.status==='av'?'available':'busy'}`;
+  d.innerHTML=`<div class="rp-id">${r.id}</div><div class="rp-name">${r.name.split(' ')[0]}</div><div class="rp-eff" style="color:rgb(0,255,157)">${r.eff}% eff</div><div class="rp-status ${r.status==='av'?'av':'bz'}">${r.status==='av'?'AVAILABLE':'ON ROUTE'}</div>`;
+  pool.appendChild(d);
+});
+
+// AI log
+const LOG_MSGS=[
+  {c:'rgba(0,245,255,1)',m:'→ Order #44892 assigned to R-04 in 0.9s'},
+  {c:'rgba(0,255,157,1)',m:'→ Rider R-04 ETA confirmed: 6.2 min'},
+  {c:'rgba(255,210,0,1)',m:'→ Workload rebalance: R-09 freed up'},
+  {c:'rgba(0,245,255,1)',m:'→ Priority order #44895 fast-tracked'},
+  {c:'rgba(139,92,246,1)',m:'→ Fleet utilization: 94.2% — optimal'},
+  {c:'rgba(0,255,157,1)',m:'→ Multi-drop plan for R-07 updated'},
+  {c:'rgba(255,107,53,1)',m:'→ Fatigue alert: R-03 load reduced'},
+  {c:'rgba(0,245,255,1)',m:'→ 847 routes optimized this session'},
+];
+const logEl=document.getElementById('ai-log');
+function addLog(){
+  const l=LOG_MSGS[Math.floor(Math.random()*LOG_MSGS.length)];
+  const t=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const line=document.createElement('div');line.className='log-line';
+  line.innerHTML=`<span class="log-time">[${t}]</span><span style="color:${l.c};font-weight:600">[DISPATCH]</span><span style="color:rgba(255,255,255,.55)"> ${l.m}</span>`;
+  logEl.appendChild(line);
+  while(logEl.children.length>40)logEl.removeChild(logEl.firstChild);
+  logEl.scrollTop=logEl.scrollHeight;
+}
+for(let i=0;i<6;i++)addLog();
+setInterval(addLog,2000);
+
+// Animate metrics
+setInterval(()=>{
+  document.getElementById('hm-dispatched').textContent=Math.round(840+Math.random()*20);
+  document.getElementById('hm-speed').textContent=(1.0+Math.random()*.5).toFixed(1)+'s';
+  document.getElementById('hm-util').textContent=(93+Math.random()*2).toFixed(1)+'%';
+},3000);
+</script>
+</body>
+</html>

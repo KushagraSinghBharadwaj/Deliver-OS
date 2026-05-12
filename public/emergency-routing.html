@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>GTI Fleet AI — Emergency Routing AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--c:0,245,255;--p:139,92,246;--g:0,255,157;--y:255,210,0;--r:255,45,85;--o:255,107,53;--bg:#00000a}
+body{background:var(--bg);color:#fff;font-family:'Exo 2',sans-serif;overflow-x:hidden;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:9999}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.6)}}
+@keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes slideup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes emergency-flash{0%,100%{border-color:rgba(255,45,85,.4)}50%{border-color:rgba(255,45,85,1);box-shadow:0 0 30px rgba(255,45,85,.5)}}
+@keyframes siren{0%,100%{background:rgba(255,45,85,.08)}50%{background:rgba(255,45,85,.18)}}
+#nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:10px 24px;background:rgba(0,0,10,.95);border-bottom:1px solid rgba(var(--r),.2);backdrop-filter:blur(20px)}
+.nav-brand{display:flex;align-items:center;gap:12px}
+.nav-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,rgb(var(--r)),rgb(var(--o)));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-sub{font-size:8px;color:rgba(var(--r),.5);font-family:'Share Tech Mono',monospace;letter-spacing:2px;margin-top:2px}
+.nav-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1.5px}
+.status-dot{width:7px;height:7px;border-radius:50%;animation:pulse-dot 1.4s ease-in-out infinite;flex-shrink:0}
+.dot-r{background:rgb(var(--r));box-shadow:0 0 8px rgb(var(--r))}
+.dot-g{background:rgb(var(--g));box-shadow:0 0 8px rgb(var(--g))}
+#nav-clock{font-size:9px;color:rgba(255,255,255,.3);font-family:'Share Tech Mono',monospace}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--r),.7);text-decoration:none;letter-spacing:1.5px;padding:4px 12px;border:1px solid rgba(var(--r),.25);border-radius:20px;transition:all .2s;background:none;cursor:pointer}
+.back-link:hover{color:rgb(var(--r));border-color:rgba(var(--r),.6);box-shadow:0 0 14px rgba(var(--r),.2)}
+#hero{position:relative;padding:40px 24px 32px;text-align:center;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(var(--r),.09) 0%,transparent 70%)}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero-inner{position:relative;z-index:2}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;padding:5px 18px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgb(var(--r));background:rgba(var(--r),.07);border:1px solid rgba(var(--r),.3);margin-bottom:14px}
+.hero-title{font-family:'Orbitron',monospace;font-size:clamp(28px,4vw,52px);font-weight:900;letter-spacing:5px;background:linear-gradient(135deg,#fff 0%,rgb(var(--r)) 50%,rgb(var(--o)) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.hero-sub{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:4px;margin-bottom:24px}
+.hero-metrics{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.h-metric{padding:12px 18px;background:rgba(255,255,255,.03);border:1px solid rgba(var(--r),.18);border-radius:12px;text-align:center;min-width:110px}
+.h-metric-val{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:rgb(var(--r))}
+.h-metric-lbl{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-top:3px}
+.glow-div{height:1px;background:linear-gradient(90deg,transparent,rgba(var(--r),.5),rgba(var(--o),.5),transparent)}
+.section{padding:28px 20px;max-width:1400px;margin:0 auto}
+.sec-tag{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgba(var(--r),.7);margin-bottom:6px}
+.sec-title{font-family:'Orbitron',monospace;font-size:clamp(15px,2.2vw,22px);font-weight:700;color:#fff;margin-bottom:4px}
+.sec-sub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:22px}
+/* ACTIVE ALERT */
+.active-alert{background:rgba(var(--r),.07);border:2px solid rgba(var(--r),.6);border-radius:16px;padding:20px;margin-bottom:20px;animation:emergency-flash 1.5s ease-in-out infinite;position:relative;overflow:hidden}
+.aa-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.aa-icon{font-size:24px;animation:pulse-dot .8s ease-in-out infinite}
+.aa-title{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:rgb(var(--r));letter-spacing:3px}
+.aa-time{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--r),.6)}
+.aa-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.aa-stat{background:rgba(var(--r),.08);border-radius:10px;padding:10px;text-align:center;border:1px solid rgba(var(--r),.2)}
+.aa-val{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:rgb(var(--r))}
+.aa-lbl{font-size:8px;color:rgba(255,255,255,.3);letter-spacing:.8px;margin-top:2px}
+.aa-resolution{background:rgba(var(--g),.06);border:1px solid rgba(var(--g),.25);border-radius:10px;padding:10px 14px;font-size:10px;font-family:'Share Tech Mono',monospace;color:rgba(var(--g),.8);line-height:1.6}
+/* INCIDENT HISTORY */
+.incident-list{display:flex;flex-direction:column;gap:10px}
+.incident-card{background:rgba(3,2,15,.92);border-radius:14px;padding:16px;position:relative;overflow:hidden;animation:slideup .4s ease both}
+.ic-resolved{border:1px solid rgba(var(--g),.25)}
+.ic-resolved::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--g)),transparent)}
+.ic-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.ic-title{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:#fff;letter-spacing:1.5px}
+.ic-badge{padding:3px 10px;border-radius:20px;font-size:8px;font-family:'Share Tech Mono',monospace;background:rgba(var(--g),.12);color:rgb(var(--g));border:1px solid rgba(var(--g),.35)}
+.ic-detail{font-size:9px;color:rgba(255,255,255,.45);font-family:'Share Tech Mono',monospace;line-height:1.6;margin-bottom:8px}
+.ic-metrics{display:flex;gap:16px}
+.ic-metric{font-size:9px;font-family:'Share Tech Mono',monospace}
+.ic-metric-lbl{color:rgba(255,255,255,.3)}
+.ic-metric-val{color:rgb(var(--g));font-weight:600}
+/* RIGHT */
+.emg-grid{display:grid;grid-template-columns:1fr 340px;gap:16px}
+@media(max-width:1000px){.emg-grid{grid-template-columns:1fr}}
+.right-col{display:flex;flex-direction:column;gap:14px}
+.panel-box{background:rgba(3,2,15,.9);border:1px solid rgba(var(--r),.18);border-radius:14px;padding:16px;position:relative;overflow:hidden}
+.panel-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--r)),transparent)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-card{background:rgba(255,255,255,.03);border-radius:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.06);text-align:center}
+.stat-val{font-family:'Orbitron',monospace;font-size:20px;font-weight:700}
+.stat-lbl{font-size:8px;color:rgba(255,255,255,.3);letter-spacing:1px;margin-top:3px}
+.ai-log{background:rgba(0,0,8,.9);border-radius:10px;height:220px;overflow-y:auto;padding:12px;font-family:'Share Tech Mono',monospace;font-size:10px;line-height:1.8;border:1px solid rgba(var(--r),.15)}
+.log-line{display:flex;gap:8px;animation:fadein .25s ease}
+.log-time{color:rgba(255,255,255,.2);min-width:70px;flex-shrink:0}
+/* RESPONSE TIME */
+.rt-bar{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.rt-lbl{font-size:9px;color:rgba(255,255,255,.5);font-family:'Share Tech Mono',monospace;min-width:80px}
+.rt-track{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.rt-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,rgb(var(--r)),rgb(var(--o)))}
+.rt-val{font-size:9px;font-family:'Orbitron',monospace;color:rgb(var(--g));min-width:40px;text-align:right}
+#footer{border-top:1px solid rgba(var(--r),.1);padding:18px 24px;text-align:center;background:rgba(0,0,5,.8);margin-top:40px}
+.footer-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,rgb(var(--r)),rgb(var(--o)));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.footer-sub{font-size:8px;color:rgba(255,255,255,.2);font-family:'Share Tech Mono',monospace;letter-spacing:2px}
+</style>
+</head>
+<body>
+<nav id="nav">
+  <div class="nav-brand">
+    <span style="font-size:20px">🚨</span>
+    <div>
+      <div class="nav-title">EMERGENCY ROUTING AI</div>
+      <div class="nav-sub">CRISIS RESPONSE ENGINE — STANDBY</div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="status-pill"><div class="status-dot dot-r"></div><span style="color:rgba(255,45,85,.7)">1 ACTIVE INCIDENT</span></div>
+    <div class="status-pill"><div class="status-dot dot-g" style="animation-delay:.5s"></div><span style="color:rgba(0,255,157,.7)">RESOLVING</span></div>
+    <span id="nav-clock"></span>
+    <button class="back-link" onclick="window.location.href='GITfleet.html'">← BACK TO FLEET AI</button>
+  </div>
+</nav>
+
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+    <div class="hero-tag"><div class="status-dot dot-r"></div>CRISIS RESPONSE ENGINE · ACCIDENT & BLOCK DETECTION</div>
+    <h1 class="hero-title">EMERGENCY ROUTING AI</h1>
+    <p class="hero-sub">DETECTION &lt;0.4s · MASS REROUTING · ZERO FAILED DELIVERIES</p>
+    <div class="hero-metrics">
+      <div class="h-metric"><div class="h-metric-val" id="hm-incidents">47</div><div class="h-metric-lbl">INCIDENTS HANDLED</div></div>
+      <div class="h-metric"><div class="h-metric-val" style="color:rgb(var(--g))">0.8s</div><div class="h-metric-lbl">AVG RESPONSE</div></div>
+      <div class="h-metric"><div class="h-metric-val" style="color:rgb(var(--y))">31</div><div class="h-metric-lbl">MASS REROUTES</div></div>
+      <div class="h-metric"><div class="h-metric-val" style="color:rgb(var(--p))">99.9%</div><div class="h-metric-lbl">AI CONFIDENCE</div></div>
+    </div>
+  </div>
+</section>
+<div class="glow-div"></div>
+
+<div class="section">
+  <div class="emg-grid">
+    <div>
+      <div class="active-alert">
+        <div class="aa-header">
+          <span class="aa-icon">🚨</span>
+          <div>
+            <div class="aa-title">⚠ ACTIVE INCIDENT — HOSUR RD KM 14</div>
+            <div class="aa-time">DETECTED: 00:00:23 AGO · RESPONSE TIME: 0.4s</div>
+          </div>
+        </div>
+        <div class="aa-stats">
+          <div class="aa-stat"><div class="aa-val">31</div><div class="aa-lbl">RIDERS AFFECTED</div></div>
+          <div class="aa-stat"><div class="aa-val">0.8s</div><div class="aa-lbl">REROUTE TIME</div></div>
+          <div class="aa-stat"><div class="aa-val">NICE Rd</div><div class="aa-lbl">BYPASS ROUTE</div></div>
+          <div class="aa-stat"><div class="aa-val" style="color:rgb(var(--g))">ACTIVE</div><div class="aa-lbl">STATUS</div></div>
+        </div>
+        <div class="aa-resolution">✓ AI RESPONSE: All 31 affected riders rerouted via NICE Road corridor in 0.8 seconds. Zero delivery failures. Customer ETAs updated automatically. Incident being monitored for clearance.</div>
+      </div>
+
+      <p class="sec-tag">◈ INCIDENT HISTORY</p>
+      <h2 class="sec-title">Resolved Emergency Events</h2>
+      <p class="sec-sub">Every incident automatically detected, responded to, and closed.</p>
+      <div class="incident-list" id="incident-list"></div>
+    </div>
+    <div class="right-col">
+      <div class="panel-box">
+        <div class="sec-tag" style="margin-bottom:12px">◈ RESPONSE METRICS</div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-val" style="color:rgb(var(--r))">1</div><div class="stat-lbl">ACTIVE NOW</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:rgb(var(--g))">46</div><div class="stat-lbl">RESOLVED TODAY</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:rgb(var(--y))">0.8s</div><div class="stat-lbl">AVG RESPONSE</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:rgb(var(--g))">0</div><div class="stat-lbl">FAILED DELIVERIES</div></div>
+        </div>
+      </div>
+      <div class="panel-box">
+        <div class="sec-tag" style="margin-bottom:12px">◈ RESPONSE TIME BY TYPE</div>
+        <div id="rt-bars"></div>
+      </div>
+      <div class="panel-box">
+        <div class="sec-tag" style="margin-bottom:10px">◈ EMERGENCY LOG</div>
+        <div class="ai-log" id="ai-log"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="footer">
+  <div class="footer-logo">🚨 GTI FLEET AI — EMERGENCY ROUTING MODULE</div>
+  <div class="footer-sub">CRISIS RESPONSE · &lt;0.4s DETECTION · MASS REROUTING · AUTONOMOUS</div>
+</div>
+
+<script>
+function tick(){document.getElementById('nav-clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});}
+setInterval(tick,1000);tick();
+
+(function(){
+  const cv=document.getElementById('hero-canvas'),ctx=cv.getContext('2d');
+  let pts=[],W,H;
+  function init(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight||200;
+    pts=Array.from({length:40},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*1.4+.3,a:Math.random()*.35+.08}));}
+  function draw(){ctx.clearRect(0,0,W,H);
+    pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<100){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(255,45,85,${.07*(1-d/100)})`;ctx.lineWidth=.5;ctx.stroke();}}));
+    pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,45,85,${p.a})`;ctx.fill();});
+    requestAnimationFrame(draw);}
+  window.addEventListener('resize',init);init();draw();
+})();
+
+const INCIDENTS=[
+  {title:'ACCIDENT — HSR LAYOUT JUNCTION',detail:'Multi-vehicle accident detected. 8 riders affected. Rerouted via Agara Lake Rd bypass.',riders:8,time:'1.4s',bypass:'Agara Lake Rd',ago:'42 min ago'},
+  {title:'ROAD BLOCK — MG ROAD KM 3',detail:'Police barricade detected. 5 riders affected. Alternate via Residency Road applied.',riders:5,time:'0.9s',bypass:'Residency Rd',ago:'1.8 hr ago'},
+  {title:'FLOODING — SILK BOARD UNDERPASS',detail:'Waterlogging detected via sensor. 14 riders pre-emptively rerouted. Zero delays.',riders:14,time:'0.6s',bypass:'NICE Road Corridor',ago:'3.2 hr ago'},
+  {title:'SIGNAL FAILURE — KR PURAM BRIDGE',detail:'Traffic signal outage. AI detected congestion spike. 6 riders rerouted instantly.',riders:6,time:'1.1s',bypass:'Whitefield Link Rd',ago:'5.1 hr ago'},
+];
+const il=document.getElementById('incident-list');
+INCIDENTS.forEach((inc,i)=>{
+  const card=document.createElement('div');card.className='incident-card ic-resolved';card.style.animationDelay=(i*.1)+'s';
+  card.innerHTML=`
+    <div class="ic-top">
+      <div class="ic-title">${inc.title}</div>
+      <div class="ic-badge">✓ RESOLVED · ${inc.ago}</div>
+    </div>
+    <div class="ic-detail">${inc.detail}</div>
+    <div class="ic-metrics">
+      <div class="ic-metric"><span class="ic-metric-lbl">RIDERS: </span><span class="ic-metric-val">${inc.riders}</span></div>
+      <div class="ic-metric"><span class="ic-metric-lbl">RESPONSE: </span><span class="ic-metric-val">${inc.time}</span></div>
+      <div class="ic-metric"><span class="ic-metric-lbl">BYPASS: </span><span class="ic-metric-val">${inc.bypass}</span></div>
+    </div>`;
+  il.appendChild(card);
+});
+
+const RT_DATA=[{lbl:'Accident',t:0.4,pct:90},{lbl:'Road Block',t:0.6,pct:75},{lbl:'Flooding',t:0.8,pct:60},{lbl:'Signal Fail',t:1.1,pct:45},{lbl:'Mass Reroute',t:0.8,pct:60}];
+const rtWrap=document.getElementById('rt-bars');
+RT_DATA.forEach(r=>{
+  const div=document.createElement('div');div.className='rt-bar';
+  div.innerHTML=`<span class="rt-lbl">${r.lbl}</span><div class="rt-track"><div class="rt-fill" style="width:${r.pct}%"></div></div><span class="rt-val">${r.t}s</span>`;
+  rtWrap.appendChild(div);
+});
+
+const LOG_MSGS=[
+  {c:'rgba(255,45,85,1)',m:'→ ⚠ Incident detected — Hosur Rd km 14'},
+  {c:'rgba(255,45,85,1)',m:'→ Emergency reroute activated — 31 riders'},
+  {c:'rgba(0,255,157,1)',m:'→ All riders rerouted in 0.8s — zero failures'},
+  {c:'rgba(255,210,0,1)',m:'→ Customer ETAs updated automatically'},
+  {c:'rgba(0,245,255,1)',m:'→ Monitoring bypass route — NICE Rd clear'},
+  {c:'rgba(0,255,157,1)',m:'→ Incident log filed — AI closure in 1.4s'},
+];
+const logEl=document.getElementById('ai-log');
+function addLog(){
+  const l=LOG_MSGS[Math.floor(Math.random()*LOG_MSGS.length)];
+  const t=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const line=document.createElement('div');line.className='log-line';
+  line.innerHTML=`<span class="log-time">[${t}]</span><span style="color:${l.c};font-weight:600">[EMERGENCY]</span><span style="color:rgba(255,255,255,.55)"> ${l.m}</span>`;
+  logEl.appendChild(line);
+  while(logEl.children.length>40)logEl.removeChild(logEl.firstChild);
+  logEl.scrollTop=logEl.scrollHeight;
+}
+for(let i=0;i<6;i++)addLog();
+setInterval(addLog,3000);
+</script>
+</body>
+</html>

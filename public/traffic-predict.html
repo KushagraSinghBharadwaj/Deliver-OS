@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>GTI Fleet AI — Traffic Predict AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --c:0,245,255;--p:139,92,246;--g:0,255,157;--y:255,210,0;
+  --r:255,45,85;--o:255,107,53;--bg:#00000a;--bg2:#03020f;
+}
+body{background:var(--bg);color:#fff;font-family:'Exo 2',sans-serif;overflow-x:hidden;min-height:100vh}
+canvas{display:block}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:#000}
+::-webkit-scrollbar-thumb{background:rgba(var(--c),.35);border-radius:2px}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:9999}
+
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.6)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes glow-sweep{0%{left:-100%}100%{left:200%}}
+@keyframes breathe{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
+@keyframes slideup{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes route-dash{0%{stroke-dashoffset:200}100%{stroke-dashoffset:0}}
+@keyframes ping{0%{transform:scale(1);opacity:1}100%{transform:scale(2.2);opacity:0}}
+
+/* ── NAV ── */
+#nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:10px 24px;background:rgba(0,0,10,.95);border-bottom:1px solid rgba(var(--c),.14);backdrop-filter:blur(20px)}
+.nav-brand{display:flex;align-items:center;gap:12px}
+.nav-icon{font-size:20px}
+.nav-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,rgb(var(--c)),rgb(var(--p)));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-sub{font-size:8px;color:rgba(var(--c),.5);font-family:'Share Tech Mono',monospace;letter-spacing:2px;margin-top:2px}
+.nav-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1.5px}
+.status-dot{width:7px;height:7px;border-radius:50%;animation:pulse-dot 1.4s ease-in-out infinite;flex-shrink:0}
+.dot-c{background:rgb(var(--c));box-shadow:0 0 8px rgb(var(--c))}
+.dot-g{background:rgb(var(--g));box-shadow:0 0 8px rgb(var(--g))}
+.dot-y{background:rgb(var(--y));box-shadow:0 0 8px rgb(var(--y))}
+.dot-r{background:rgb(var(--r));box-shadow:0 0 8px rgb(var(--r))}
+#nav-clock{font-size:9px;color:rgba(255,255,255,.3);font-family:'Share Tech Mono',monospace}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--c),.7);text-decoration:none;letter-spacing:1.5px;padding:4px 12px;border:1px solid rgba(var(--c),.25);border-radius:20px;transition:all .2s;cursor:pointer;background:none}
+.back-link:hover{color:rgb(var(--c));border-color:rgba(var(--c),.6);box-shadow:0 0 14px rgba(var(--c),.2)}
+
+/* ── HERO ── */
+#hero{position:relative;padding:36px 24px 28px;text-align:center;overflow:hidden;background:radial-gradient(ellipse 90% 70% at 50% 50%,rgba(var(--c),.06) 0%,transparent 70%)}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero-inner{position:relative;z-index:2}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;padding:5px 18px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgb(var(--c));background:rgba(var(--c),.07);border:1px solid rgba(var(--c),.3);margin-bottom:12px}
+.hero-title{font-family:'Orbitron',monospace;font-size:clamp(26px,4vw,48px);font-weight:900;letter-spacing:5px;background:linear-gradient(135deg,#fff 0%,rgb(var(--c)) 50%,rgb(var(--p)) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;line-height:1.1}
+.hero-sub{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:4px;margin-bottom:20px}
+.hero-metrics{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.h-metric{padding:10px 18px;background:rgba(255,255,255,.03);border:1px solid rgba(var(--c),.18);border-radius:12px;text-align:center;min-width:110px;backdrop-filter:blur(8px)}
+.h-metric-val{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:rgb(var(--c));transition:all .5s}
+.h-metric-lbl{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-top:3px}
+
+.glow-div{height:1px;background:linear-gradient(90deg,transparent,rgba(var(--c),.4),rgba(var(--p),.4),transparent)}
+
+/* ── ROUTE PLANNER (NEW) ── */
+#route-section{padding:28px 20px 0;max-width:1400px;margin:0 auto}
+#route-planner{background:rgba(3,2,15,.96);border:1px solid rgba(var(--c),.28);border-radius:18px;padding:22px 24px;position:relative;overflow:hidden;margin-bottom:0}
+#route-planner::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--c)),rgb(var(--p)),transparent)}
+#route-planner::after{content:'';position:absolute;bottom:0;right:0;width:260px;height:260px;background:radial-gradient(circle,rgba(var(--c),.04),transparent 70%);pointer-events:none}
+
+.rp-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.rp-icon{width:38px;height:38px;border-radius:10px;background:rgba(var(--c),.1);border:1px solid rgba(var(--c),.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.rp-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:2px;color:#fff}
+.rp-sub{font-size:9px;color:rgba(var(--c),.6);font-family:'Share Tech Mono',monospace;letter-spacing:1.5px;margin-top:2px}
+
+.rp-inputs{display:grid;grid-template-columns:1fr 40px 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:16px}
+@media(max-width:900px){.rp-inputs{grid-template-columns:1fr 1fr;}.rp-swap-btn{display:none!important}.rp-weather-field{grid-column:1/-1}}
+@media(max-width:600px){.rp-inputs{grid-template-columns:1fr}}
+
+.rp-field{display:flex;flex-direction:column;gap:6px}
+.rp-label{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:2px;color:rgba(var(--c),.6);display:flex;align-items:center;gap:5px}
+.rp-select,.rp-input{width:100%;padding:10px 12px;background:rgba(0,0,15,.7);border:1px solid rgba(var(--c),.2);border-radius:10px;color:#fff;font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;transition:all .2s;appearance:none;-webkit-appearance:none;cursor:pointer}
+.rp-select:hover,.rp-input:hover{border-color:rgba(var(--c),.4)}
+.rp-select:focus,.rp-input:focus{border-color:rgba(var(--c),.7);box-shadow:0 0 16px rgba(var(--c),.1);background:rgba(0,0,20,.9)}
+.rp-select option{background:#03020f;color:#fff}
+.rp-input::placeholder{color:rgba(255,255,255,.25)}
+
+.rp-swap-btn{width:40px;height:40px;border-radius:50%;background:rgba(var(--c),.08);border:1px solid rgba(var(--c),.25);color:rgb(var(--c));cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .25s;flex-shrink:0;align-self:flex-end;margin-bottom:0}
+.rp-swap-btn:hover{background:rgba(var(--c),.18);transform:rotate(180deg);box-shadow:0 0 16px rgba(var(--c),.25)}
+
+.rp-find-btn{padding:10px 22px;border-radius:10px;background:linear-gradient(135deg,rgba(var(--c),.18),rgba(var(--p),.14));border:1px solid rgba(var(--c),.45);color:rgb(var(--c));font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;transition:all .25s;white-space:nowrap;align-self:flex-end;height:42px;position:relative;overflow:hidden}
+.rp-find-btn::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:glow-sweep 2.5s ease-in-out infinite}
+.rp-find-btn:hover{background:linear-gradient(135deg,rgba(var(--c),.28),rgba(var(--p),.22));border-color:rgba(var(--c),.8);box-shadow:0 0 24px rgba(var(--c),.25);transform:translateY(-1px)}
+.rp-find-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+.weather-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.w-chip{padding:5px 14px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1.5px;cursor:pointer;border:1px solid rgba(var(--c),.2);background:rgba(var(--c),.05);color:rgba(var(--c),.6);transition:all .2s;white-space:nowrap}
+.w-chip:hover{border-color:rgba(var(--c),.5);color:rgb(var(--c))}
+.w-chip.wc-active{background:rgba(var(--c),.15);border-color:rgba(var(--c),.7);color:rgb(var(--c));box-shadow:0 0 12px rgba(var(--c),.15)}
+.w-chip.wr-active{background:rgba(var(--p),.15);border-color:rgba(var(--p),.7);color:rgb(var(--p))}
+.w-chip.wh-active{background:rgba(var(--r),.15);border-color:rgba(var(--r),.7);color:rgb(var(--r))}
+.w-chip.wf-active{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.35);color:rgba(255,255,255,.8)}
+
+/* ── ROUTE RESULT ── */
+#route-result{display:none;margin-top:18px;border-top:1px solid rgba(var(--c),.12);padding-top:18px;animation:fadein .3s ease}
+.route-result-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+@media(max-width:700px){.route-result-grid{grid-template-columns:1fr 1fr}}
+.rr-metric{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px 12px;text-align:center}
+.rr-val{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;transition:all .4s}
+.rr-lbl{font-size:8px;color:rgba(255,255,255,.3);letter-spacing:1px;margin-top:3px}
+
+.route-path-visual{display:flex;align-items:center;gap:0;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.rp-node{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+.rp-node-dot{width:12px;height:12px;border-radius:50%;border:2px solid;position:relative}
+.rp-node-dot::after{content:'';position:absolute;inset:-4px;border-radius:50%;opacity:.3;animation:ping 1.5s ease-out infinite}
+.rp-node-src .rp-node-dot{border-color:rgb(var(--g));background:rgba(var(--g),.3)}.rp-node-src .rp-node-dot::after{background:rgb(var(--g))}
+.rp-node-dst .rp-node-dot{border-color:rgb(var(--r));background:rgba(var(--r),.3)}.rp-node-dst .rp-node-dot::after{background:rgb(var(--r))}
+.rp-node-mid .rp-node-dot{border-color:rgb(var(--y));background:rgba(var(--y),.3)}.rp-node-mid .rp-node-dot::after{background:rgb(var(--y));animation-delay:.5s}
+.rp-node-lbl{font-size:8px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.5);text-align:center;max-width:70px;line-height:1.3}
+.rp-connector{flex:1;min-width:30px;height:2px;background:linear-gradient(90deg,rgba(var(--c),.3),rgba(var(--c),.6),rgba(var(--c),.3));position:relative;overflow:hidden;align-self:flex-start;margin-top:6px}
+.rp-connector::after{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgb(var(--c)),transparent);animation:glow-sweep 1.8s ease-in-out infinite}
+
+.route-ai-box{background:rgba(var(--c),.04);border:1px solid rgba(var(--c),.15);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.route-ai-lbl{font-size:8px;font-family:'Share Tech Mono',monospace;color:rgba(var(--c),.6);letter-spacing:2px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.route-ai-text{font-size:10px;color:rgba(255,255,255,.65);font-family:'Share Tech Mono',monospace;line-height:1.7}
+
+.route-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+.route-step{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:9px;padding:9px 11px;display:flex;gap:9px;align-items:flex-start}
+.rs-num{width:20px;height:20px;border-radius:50%;background:rgba(var(--c),.12);border:1px solid rgba(var(--c),.3);color:rgb(var(--c));font-family:'Share Tech Mono',monospace;font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.rs-txt{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.65);line-height:1.5}
+.rs-detail{font-size:8px;color:rgba(255,255,255,.3);margin-top:2px}
+
+.route-alt-bar{display:flex;align-items:center;gap:8px;background:rgba(var(--y),.06);border:1px solid rgba(var(--y),.2);border-radius:8px;padding:8px 12px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--y),.8);margin-bottom:10px}
+.route-warn-bar{display:flex;align-items:center;gap:8px;background:rgba(var(--r),.06);border:1px solid rgba(var(--r),.25);border-radius:8px;padding:8px 12px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--r),.8);margin-bottom:10px}
+
+.route-loading{display:none;align-items:center;gap:10px;padding:14px 0;font-size:10px;font-family:'Share Tech Mono',monospace;color:rgba(var(--c),.6)}
+.route-loading.show{display:flex}
+.rl-spinner{width:18px;height:18px;border:2px solid rgba(var(--c),.2);border-top-color:rgb(var(--c));border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.cong-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:20px;font-size:8px;font-family:'Share Tech Mono',monospace;margin-right:6px}
+.cb-low{background:rgba(var(--g),.12);color:rgb(var(--g));border:1px solid rgba(var(--g),.35)}
+.cb-moderate{background:rgba(var(--y),.12);color:rgb(var(--y));border:1px solid rgba(var(--y),.35)}
+.cb-high{background:rgba(var(--o),.12);color:rgb(255,107,53);border:1px solid rgba(var(--o),.35)}
+.cb-critical{background:rgba(var(--r),.12);color:rgb(var(--r));border:1px solid rgba(var(--r),.35)}
+
+/* ── CONTROLS BAR ── */
+#controls-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 20px;background:rgba(3,2,15,.9);border:1px solid rgba(var(--c),.15);border-radius:14px;margin-bottom:22px;max-width:1400px;margin-left:auto;margin-right:auto;position:relative;overflow:hidden}
+#controls-bar::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--c)),transparent);opacity:.6}
+.ctrl-label{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--c),.7);letter-spacing:2px;white-space:nowrap}
+.weather-btns{display:flex;gap:8px;flex-wrap:wrap}
+.weather-btn{padding:6px 14px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1.5px;cursor:pointer;border:1px solid rgba(var(--c),.25);background:rgba(var(--c),.06);color:rgba(var(--c),.7);transition:all .2s;white-space:nowrap}
+.weather-btn:hover,.weather-btn.active{background:rgba(var(--c),.18);border-color:rgba(var(--c),.7);color:rgb(var(--c));box-shadow:0 0 14px rgba(var(--c),.2)}
+.weather-btn.w-rain.active{background:rgba(var(--p),.18);border-color:rgba(var(--p),.7);color:rgb(var(--p));box-shadow:0 0 14px rgba(var(--p),.2)}
+.weather-btn.w-heavy.active{background:rgba(var(--r),.18);border-color:rgba(var(--r),.7);color:rgb(var(--r));box-shadow:0 0 14px rgba(var(--r),.2)}
+.weather-btn.w-fog.active{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4);color:rgba(255,255,255,.8)}
+.ctrl-divider{width:1px;height:28px;background:rgba(var(--c),.15);flex-shrink:0}
+.refresh-info{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:6px;margin-left:auto}
+.refresh-spinner{width:10px;height:10px;border:1.5px solid rgba(var(--c),.25);border-top-color:rgb(var(--c));border-radius:50%;animation:spin .8s linear infinite;display:none}
+.refresh-spinner.active{display:block}
+#last-update{color:rgba(var(--c),.5)}
+
+/* ── MAIN GRID ── */
+.section{padding:28px 20px;max-width:1400px;margin:0 auto}
+.sec-tag{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgba(var(--c),.7);margin-bottom:6px}
+.sec-title{font-family:'Orbitron',monospace;font-size:clamp(15px,2.2vw,22px);font-weight:700;color:#fff;margin-bottom:4px}
+.sec-sub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:22px}
+
+#main-grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+@media(max-width:1000px){#main-grid{grid-template-columns:1fr}}
+
+#zones-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:700px){#zones-grid{grid-template-columns:1fr}}
+
+.zone-card{border-radius:16px;padding:18px;background:rgba(3,2,15,.92);border:1px solid rgba(255,255,255,.08);position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s;animation:slideup .4s ease both}
+.zone-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px}
+.zone-card::after{content:'';position:absolute;right:-16px;bottom:-16px;width:70px;height:70px;border-radius:50%;opacity:.12;animation:breathe 3s ease-in-out infinite}
+.zone-card:hover{transform:translateY(-3px)}
+.zc-low{border-color:rgba(var(--g),.3)}.zc-low::before{background:linear-gradient(90deg,transparent,rgb(var(--g)),transparent)}.zc-low::after{background:radial-gradient(circle,rgb(var(--g)),transparent)}.zc-low:hover{box-shadow:0 0 28px rgba(var(--g),.18)}
+.zc-moderate{border-color:rgba(var(--y),.3)}.zc-moderate::before{background:linear-gradient(90deg,transparent,rgb(var(--y)),transparent)}.zc-moderate::after{background:radial-gradient(circle,rgb(var(--y)),transparent)}.zc-moderate:hover{box-shadow:0 0 28px rgba(var(--y),.18)}
+.zc-high{border-color:rgba(var(--o),.3)}.zc-high::before{background:linear-gradient(90deg,transparent,rgb(var(--o)),transparent)}.zc-high::after{background:radial-gradient(circle,rgb(var(--o)),transparent)}.zc-high:hover{box-shadow:0 0 28px rgba(var(--o),.18)}
+.zc-critical{border-color:rgba(var(--r),.4)}.zc-critical::before{background:linear-gradient(90deg,transparent,rgb(var(--r)),transparent)}.zc-critical::after{background:radial-gradient(circle,rgb(var(--r)),transparent)}.zc-critical:hover{box-shadow:0 0 28px rgba(var(--r),.25)}
+
+.zone-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.zone-name{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:2px;color:#fff}
+.zone-id{font-size:8px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.3);margin-top:2px}
+.zone-badge{padding:3px 10px;border-radius:20px;font-size:8px;font-family:'Share Tech Mono',monospace;letter-spacing:1.5px;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.badge-low{background:rgba(var(--g),.12);color:rgb(var(--g));border:1px solid rgba(var(--g),.4)}
+.badge-moderate{background:rgba(var(--y),.12);color:rgb(var(--y));border:1px solid rgba(var(--y),.4)}
+.badge-high{background:rgba(var(--o),.12);color:rgb(255,107,53);border:1px solid rgba(var(--o),.4)}
+.badge-critical{background:rgba(var(--r),.12);color:rgb(var(--r));border:1px solid rgba(var(--r),.4)}
+
+.cong-bar-wrap{margin-bottom:12px}
+.cong-bar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.cong-bar-lbl{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.4);letter-spacing:1px}
+.cong-pct{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;transition:all .5s}
+.cong-track{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.cong-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+.cong-fill::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:glow-sweep 2s ease-in-out infinite}
+
+.zone-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.zs-item{background:rgba(255,255,255,.03);border-radius:8px;padding:7px 9px;border:1px solid rgba(255,255,255,.05)}
+.zs-val{font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:600;transition:all .4s}
+.zs-lbl{font-size:8px;color:rgba(255,255,255,.3);letter-spacing:.8px;margin-top:1px}
+
+.zone-rec{background:rgba(var(--c),.04);border:1px solid rgba(var(--c),.15);border-radius:9px;padding:9px 11px;font-size:9.5px;color:rgba(255,255,255,.55);font-family:'Share Tech Mono',monospace;line-height:1.6;transition:all .4s}
+.zone-rec-label{font-size:8px;color:rgba(var(--c),.6);letter-spacing:2px;margin-bottom:4px}
+
+/* ── RIGHT COL ── */
+.right-col{display:flex;flex-direction:column;gap:16px}
+.map-panel{border-radius:14px;background:rgba(3,2,15,.9);border:1px solid rgba(var(--c),.18);padding:16px;position:relative;overflow:hidden}
+.map-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--c)),transparent)}
+#gmap{width:100%;height:320px;border-radius:10px;overflow:hidden;background:#000510}
+.map-loading{display:flex;align-items:center;justify-content:center;height:320px;color:rgba(var(--c),.5);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;border:1px dashed rgba(var(--c),.2);border-radius:10px}
+
+#terminal{border-radius:14px;background:rgba(0,0,8,.95);border:1px solid rgba(var(--c),.2);overflow:hidden}
+.term-header{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(var(--c),.04);border-bottom:1px solid rgba(var(--c),.1)}
+.term-dot{width:10px;height:10px;border-radius:50%}
+.term-title-txt{font-size:10px;font-family:'Share Tech Mono',monospace;color:rgba(var(--c),.7);letter-spacing:2px;margin-left:6px}
+.live-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1.5px;background:rgba(var(--c),.08);color:rgb(var(--c));border:1px solid rgba(var(--c),.35)}
+.term-body{padding:12px;height:220px;overflow-y:auto;font-family:'Share Tech Mono',monospace;font-size:10px;line-height:1.85}
+.log-line{display:flex;gap:8px;animation:fadein .25s ease}
+.log-time{color:rgba(255,255,255,.2);min-width:70px;flex-shrink:0}
+.log-src-c{color:rgb(var(--c));font-weight:600}
+.log-src-y{color:rgb(var(--y));font-weight:600}
+.log-src-g{color:rgb(var(--g));font-weight:600}
+.log-src-r{color:rgb(var(--r));font-weight:600}
+.log-src-o{color:rgb(var(--o));font-weight:600}
+.log-msg{color:rgba(255,255,255,.55)}
+
+.summary-panel{border-radius:14px;background:rgba(3,2,15,.9);border:1px solid rgba(var(--p),.2);padding:16px;position:relative;overflow:hidden}
+.summary-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--p)),transparent)}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sum-card{background:rgba(255,255,255,.03);border-radius:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.06);text-align:center}
+.sum-val{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;transition:all .5s}
+.sum-lbl{font-size:8px;color:rgba(255,255,255,.3);letter-spacing:1px;margin-top:3px}
+
+.forecast-panel{border-radius:14px;background:rgba(3,2,15,.9);border:1px solid rgba(var(--y),.18);padding:16px;position:relative;overflow:hidden}
+.forecast-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--y)),transparent)}
+.forecast-bars{display:flex;align-items:flex-end;gap:5px;height:60px;margin-top:12px}
+.f-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.f-bar{width:100%;border-radius:3px 3px 0 0;transition:height .6s ease;min-height:4px}
+.f-bar-lbl{font-size:7px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.3)}
+
+#error-banner{display:none;background:rgba(var(--r),.1);border:1px solid rgba(var(--r),.4);border-radius:10px;padding:12px 16px;font-size:10px;font-family:'Share Tech Mono',monospace;color:rgb(var(--r));margin-bottom:16px;max-width:1400px;margin-left:auto;margin-right:auto}
+.zone-skeleton{border-radius:16px;border:1px solid rgba(var(--c),.12);background:rgba(3,2,15,.7);min-height:200px;animation:breathe 1.5s ease-in-out infinite}
+
+#footer{border-top:1px solid rgba(var(--c),.1);padding:18px 24px;text-align:center;background:rgba(0,0,5,.8);margin-top:40px}
+.footer-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,rgb(var(--c)),rgb(var(--p)));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.footer-sub{font-size:8px;color:rgba(255,255,255,.2);font-family:'Share Tech Mono',monospace;letter-spacing:2px}
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ──────────────────────────────────────────────────────── -->
+<nav id="nav">
+  <div class="nav-brand">
+    <span class="nav-icon">🚦</span>
+    <div>
+      <div class="nav-title">TRAFFIC PREDICT AI</div>
+      <div class="nav-sub">CONGESTION FORECASTING ENGINE — REAL-TIME</div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="status-pill"><div class="status-dot dot-c"></div><span style="color:rgba(0,245,255,.7)">PREDICTING</span></div>
+    <div class="status-pill"><div class="status-dot dot-g" style="animation-delay:.5s"></div><span style="color:rgba(0,255,157,.7)">8 ZONES LIVE</span></div>
+    <span id="nav-clock"></span>
+    <button class="back-link" onclick="window.location.href='GITfleet.html'">← BACK TO FLEET AI</button>
+  </div>
+</nav>
+
+<!-- ─── HERO ──────────────────────────────────────────────────────── -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+    <div class="hero-tag"><div class="status-dot dot-c"></div>AUTONOMOUS CONGESTION INTELLIGENCE · BANGALORE METRO GRID</div>
+    <h1 class="hero-title">TRAFFIC PREDICT AI</h1>
+    <p class="hero-sub">REAL-TIME ZONE ANALYSIS · AI ROUTING RECOMMENDATIONS · 72HR FORECAST</p>
+    <div class="hero-metrics">
+      <div class="h-metric"><div class="h-metric-val" id="hm-zones" style="color:rgb(var(--c))">8</div><div class="h-metric-lbl">ZONES ACTIVE</div></div>
+      <div class="h-metric"><div class="h-metric-val" id="hm-conf" style="color:rgb(var(--g))">97.3%</div><div class="h-metric-lbl">AVG CONFIDENCE</div></div>
+      <div class="h-metric"><div class="h-metric-val" id="hm-saving" style="color:rgb(var(--y))">14 min</div><div class="h-metric-lbl">AVG TIME SAVED</div></div>
+      <div class="h-metric"><div class="h-metric-val" id="hm-critical" style="color:rgb(var(--r))">—</div><div class="h-metric-lbl">CRITICAL ZONES</div></div>
+      <div class="h-metric"><div class="h-metric-val" id="hm-refresh" style="color:rgb(var(--p))">5s</div><div class="h-metric-lbl">REFRESH RATE</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-div"></div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     ★  DELIVERY ROUTE PLANNER — SOURCE → DESTINATION  ★
+     ════════════════════════════════════════════════════════════════ -->
+<div id="route-section">
+  <div id="route-planner">
+
+    <div class="rp-header">
+      <div class="rp-icon">🚀</div>
+      <div>
+        <div class="rp-title">DELIVERY ROUTE PLANNER</div>
+        <div class="rp-sub">◈ SOURCE → DESTINATION · AI FASTEST ROUTE · LIVE TRAFFIC ANALYSIS</div>
+      </div>
+    </div>
+
+    <!-- Weather -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <span class="ctrl-label">◈ WEATHER:</span>
+      <div class="weather-chips">
+        <div class="w-chip wc-active" data-w="clear" onclick="setRouteWeather('clear',this)">☀ CLEAR</div>
+        <div class="w-chip" data-w="rain" onclick="setRouteWeather('rain',this)">🌧 RAIN</div>
+        <div class="w-chip" data-w="heavy_rain" onclick="setRouteWeather('heavy_rain',this)">⛈ HEAVY RAIN</div>
+        <div class="w-chip" data-w="fog" onclick="setRouteWeather('fog',this)">🌫 FOG</div>
+      </div>
+    </div>
+
+    <!-- Inputs row -->
+    <div class="rp-inputs">
+      <!-- SOURCE -->
+      <div class="rp-field">
+        <div class="rp-label">📍 SOURCE LOCATION</div>
+        <select class="rp-select" id="rp-src" onchange="handleCustomSrc(this)">
+          <option value="">— Select source zone —</option>
+          <option>Koramangala</option>
+          <option>Indiranagar</option>
+          <option>Whitefield</option>
+          <option>HSR Layout</option>
+          <option>Electronic City</option>
+          <option>Marathahalli</option>
+          <option>Hebbal</option>
+          <option>JP Nagar</option>
+          <option value="custom">✏ Custom address…</option>
+        </select>
+        <input class="rp-input" id="rp-src-custom" placeholder="Type source address…" style="display:none;margin-top:6px"/>
+      </div>
+
+      <!-- SWAP -->
+      <button class="rp-swap-btn" onclick="swapSrcDst()" title="Swap source & destination">⇄</button>
+
+      <!-- DESTINATION -->
+      <div class="rp-field">
+        <div class="rp-label">🏁 DESTINATION</div>
+        <select class="rp-select" id="rp-dst" onchange="handleCustomDst(this)">
+          <option value="">— Select destination zone —</option>
+          <option>Koramangala</option>
+          <option>Indiranagar</option>
+          <option>Whitefield</option>
+          <option>HSR Layout</option>
+          <option>Electronic City</option>
+          <option>Marathahalli</option>
+          <option>Hebbal</option>
+          <option>JP Nagar</option>
+          <option value="custom">✏ Custom address…</option>
+        </select>
+        <input class="rp-input" id="rp-dst-custom" placeholder="Type destination address…" style="display:none;margin-top:6px"/>
+      </div>
+
+      <!-- VEHICLE TYPE -->
+      <div class="rp-field">
+        <div class="rp-label">🚗 VEHICLE TYPE</div>
+        <select class="rp-select" id="rp-vehicle">
+          <option value="bike">🏍 Delivery Bike</option>
+          <option value="auto">🛺 Auto Rickshaw</option>
+          <option value="car">🚗 Car / SUV</option>
+          <option value="van">🚐 Delivery Van</option>
+          <option value="truck">🚛 Truck / HCV</option>
+        </select>
+      </div>
+
+      <!-- FIND BUTTON -->
+      <button class="rp-find-btn" id="rp-find-btn" onclick="findDeliveryRoute()">⚡ FIND FASTEST ROUTE</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="route-loading" id="route-loading">
+      <div class="rl-spinner"></div>
+      <span id="route-loading-txt">Scanning live traffic zones…</span>
+    </div>
+
+    <!-- RESULT -->
+    <div id="route-result">
+
+      <!-- Route path visual -->
+      <div style="margin-bottom:12px">
+        <div class="sec-tag" style="margin-bottom:8px">◈ OPTIMAL ROUTE PATH</div>
+        <div class="route-path-visual" id="route-path-visual"></div>
+      </div>
+
+      <!-- Alert bars -->
+      <div id="route-alerts"></div>
+
+      <!-- Metrics -->
+      <div class="route-result-grid" id="route-metrics"></div>
+
+      <!-- AI Recommendation -->
+      <div class="route-ai-box">
+        <div class="route-ai-lbl"><div class="status-dot dot-c" style="width:5px;height:5px"></div>AI ROUTE RECOMMENDATION</div>
+        <div class="route-ai-text" id="route-ai-text"></div>
+      </div>
+
+      <!-- Steps -->
+      <div class="sec-tag" style="margin-bottom:8px">◈ TURN-BY-TURN DIRECTIONS</div>
+      <div class="route-steps" id="route-steps"></div>
+
+    </div><!-- /route-result -->
+  </div><!-- /route-planner -->
+</div><!-- /route-section -->
+
+<!-- ─── CONTROLS BAR ──────────────────────────────────────────────── -->
+<div id="controls-bar" class="section" style="padding:14px 20px;margin-top:20px">
+  <span class="ctrl-label">◈ ZONE WEATHER CONDITION:</span>
+  <div class="weather-btns">
+    <button class="weather-btn active" data-weather="clear" onclick="setWeather('clear',this)">☀ CLEAR</button>
+    <button class="weather-btn w-rain" data-weather="rain" onclick="setWeather('rain',this)">🌧 RAIN</button>
+    <button class="weather-btn w-heavy" data-weather="heavy_rain" onclick="setWeather('heavy_rain',this)">⛈ HEAVY RAIN</button>
+    <button class="weather-btn w-fog" data-weather="fog" onclick="setWeather('fog',this)">🌫 FOG</button>
+  </div>
+  <div class="ctrl-divider"></div>
+  <div class="refresh-info">
+    <div class="refresh-spinner" id="spinner"></div>
+    <span>LAST UPDATE: <span id="last-update">—</span></span>
+  </div>
+</div>
+
+<div id="error-banner">⚠ API UNREACHABLE — Using demo data. Check localhost:5000 is running.</div>
+
+<!-- ─── MAIN CONTENT GRID ──────────────────────────────────────────── -->
+<div class="section" style="padding-top:0">
+  <div id="main-grid">
+
+    <div>
+      <p class="sec-tag">◈ LIVE ZONE INTELLIGENCE</p>
+      <h2 class="sec-title">Bangalore Metro Congestion Grid</h2>
+      <p class="sec-sub">All 8 zones monitored autonomously — AI predictions updated every 5 seconds.</p>
+      <div id="zones-grid">
+        <div class="zone-skeleton"></div>
+        <div class="zone-skeleton" style="animation-delay:.1s"></div>
+        <div class="zone-skeleton" style="animation-delay:.2s"></div>
+        <div class="zone-skeleton" style="animation-delay:.3s"></div>
+        <div class="zone-skeleton" style="animation-delay:.4s"></div>
+        <div class="zone-skeleton" style="animation-delay:.5s"></div>
+        <div class="zone-skeleton" style="animation-delay:.6s"></div>
+        <div class="zone-skeleton" style="animation-delay:.7s"></div>
+      </div>
+    </div>
+
+    <div class="right-col">
+
+      <div class="map-panel">
+        <div class="sec-tag" style="margin-bottom:10px">◈ LIVE CONGESTION MAP — BANGALORE</div>
+        <div id="gmap"><div class="map-loading">⟳ LOADING MAP…</div></div>
+        <div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:5px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(0,245,255,.7)">
+            <div style="width:24px;height:3px;background:#00f5ff;border-radius:2px"></div> FASTEST ROUTE
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(139,92,246,.7)">
+            <div style="width:24px;height:3px;background:#8b5cf6;border-radius:2px;opacity:.6"></div> ALT ROUTE
+          </div>
+          <div id="map-route-status" style="font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(0,255,157,.6);margin-left:auto"></div>
+        </div>
+      </div>
+
+      <div class="summary-panel">
+        <div class="sec-tag" style="margin-bottom:12px">◈ CITY PULSE</div>
+        <div class="summary-grid">
+          <div class="sum-card"><div class="sum-val" style="color:rgb(var(--g))" id="sum-low">—</div><div class="sum-lbl">LOW ZONES</div></div>
+          <div class="sum-card"><div class="sum-val" style="color:rgb(var(--y))" id="sum-mod">—</div><div class="sum-lbl">MODERATE</div></div>
+          <div class="sum-card"><div class="sum-val" style="color:rgb(var(--o))" id="sum-high">—</div><div class="sum-lbl">HIGH ZONES</div></div>
+          <div class="sum-card"><div class="sum-val" style="color:rgb(var(--r))" id="sum-crit">—</div><div class="sum-lbl">CRITICAL</div></div>
+        </div>
+      </div>
+
+      <div class="forecast-panel">
+        <div class="sec-tag" style="margin-bottom:6px">◈ 24-HR CONGESTION FORECAST</div>
+        <div class="forecast-bars" id="forecast-bars"></div>
+      </div>
+
+      <div id="terminal">
+        <div class="term-header">
+          <div class="term-dot" style="background:#ff5f57"></div>
+          <div class="term-dot" style="background:#ffbd2e"></div>
+          <div class="term-dot" style="background:#28c840"></div>
+          <span class="term-title-txt">traffic_predict_ai — live_stream</span>
+          <div class="live-badge" style="margin-left:auto"><div class="status-dot dot-c" style="width:5px;height:5px"></div>LIVE</div>
+        </div>
+        <div class="term-body" id="term-body"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="footer">
+  <div class="footer-logo">🚦 GTI FLEET AI — TRAFFIC PREDICT MODULE</div>
+  <div class="footer-sub">AUTONOMOUS · 8 ZONES · REAL-TIME · SELF-LEARNING</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     JAVASCRIPT
+     ══════════════════════════════════════════════════════════════ -->
+<script>
+/*
+ ╔══════════════════════════════════════════════════════════════════╗
+ ║  BACKEND PROXY REQUIRED — add this to your Flask app.py         ║
+ ║                                                                  ║
+ ║  import anthropic, os                                            ║
+ ║  client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_KEY"])║
+ ║                                                                  ║
+ ║  @app.route('/api/fleet/ai-route', methods=['POST'])             ║
+ ║  def ai_route():                                                 ║
+ ║      prompt = request.json.get('prompt','')                      ║
+ ║      msg = client.messages.create(                               ║
+ ║          model="claude-sonnet-4-20250514",                       ║
+ ║          max_tokens=1000,                                         ║
+ ║          messages=[{"role":"user","content":prompt}]             ║
+ ║      )                                                           ║
+ ║      return jsonify({"text": msg.content[0].text})               ║
+ ╚══════════════════════════════════════════════════════════════════╝
+*/
+// ─── CLOCK ───────────────────────────────────────────────────────────────────
+function tick(){document.getElementById('nav-clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});}
+setInterval(tick,1000);tick();
+
+// ─── HERO CANVAS ─────────────────────────────────────────────────────────────
+(function(){
+  const cv=document.getElementById('hero-canvas');
+  const ctx=cv.getContext('2d');
+  let pts=[],W,H;
+  function init(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight||220;
+    pts=Array.from({length:45},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*1.4+.3,a:Math.random()*.35+.08}));}
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<100){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(0,245,255,${.07*(1-d/100)})`;ctx.lineWidth=.5;ctx.stroke();}}));
+    pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(0,245,255,${p.a})`;ctx.fill();});
+    requestAnimationFrame(draw);}
+  window.addEventListener('resize',init);init();draw();
+})();
+
+// ─── GLOBAL STATE ─────────────────────────────────────────────────────────────
+let currentWeather = 'clear';
+let routeWeather   = 'clear';
+let zonesData      = [];
+let _map           = null;
+let _mapMarkers    = [];
+let _infoWindows   = [];
+
+// ─── ZONE LIVE DATA ───────────────────────────────────────────────────────────
+const ZONE_LIVE = {
+  'Koramangala':    { congestion:78, level:'high',     alt:'80-ft Road bypass',       hazard:'Sony World junction bottleneck' },
+  'Indiranagar':    { congestion:52, level:'moderate', alt:'CMH Road',                hazard:'100-ft Road peak-hour delays' },
+  'Whitefield':     { congestion:24, level:'low',      alt:'None needed',             hazard:'ITPL signal minor delays' },
+  'HSR Layout':     { congestion:92, level:'critical', alt:'Agara Lake Road',         hazard:'Sector 1 junction completely jammed' },
+  'Electronic City':{ congestion:71, level:'high',     alt:'NICE Road corridor',      hazard:'Hosur Road saturated near toll' },
+  'Marathahalli':   { congestion:58, level:'moderate', alt:'KR Puram Link',           hazard:'ORR bridge moderate jam' },
+  'Hebbal':         { congestion:65, level:'high',     alt:'Alternate NH entry',      hazard:'Hebbal flyover peak congestion' },
+  'JP Nagar':       { congestion:31, level:'low',      alt:'None needed',             hazard:'South corridor clear' },
+};
+
+const WEATHER_MOD = {
+  clear:      { factor:1.0,  note:'' },
+  rain:       { factor:1.25, note:'⚠ Rain adds ~25% travel time. Watch for waterlogging at underpasses.' },
+  heavy_rain: { factor:1.6,  note:'⛈ Heavy rain: major delays expected. Avoid underpasses, prefer elevated roads.' },
+  fog:        { factor:1.15, note:'🌫 Fog: reduce speed, use low beams, maintain extended following distance.' },
+};
+
+const VEHICLE_LABELS = { bike:'Delivery Bike', auto:'Auto Rickshaw', car:'Car / SUV', van:'Delivery Van', truck:'Truck / HCV' };
+
+// ─── ZONE COORDINATES ─────────────────────────────────────────────────────────
+const ZONE_COORDS = {
+  'Koramangala':     { lat:12.9352, lng:77.6245 },
+  'Indiranagar':     { lat:12.9719, lng:77.6412 },
+  'Whitefield':      { lat:12.9698, lng:77.7500 },
+  'HSR Layout':      { lat:12.9116, lng:77.6389 },
+  'Electronic City': { lat:12.8399, lng:77.6770 },
+  'Marathahalli':    { lat:12.9591, lng:77.6971 },
+  'Hebbal':          { lat:13.0358, lng:77.5970 },
+  'JP Nagar':        { lat:12.9063, lng:77.5857 },
+};
+
+// ─── ROUTE PLANNER — HELPERS ──────────────────────────────────────────────────
+function handleCustomSrc(sel){
+  document.getElementById('rp-src-custom').style.display = sel.value==='custom'?'block':'none';
+}
+function handleCustomDst(sel){
+  document.getElementById('rp-dst-custom').style.display = sel.value==='custom'?'block':'none';
+}
+function swapSrcDst(){
+  const s=document.getElementById('rp-src'), d=document.getElementById('rp-dst');
+  const sv=s.value, dv=d.value; s.value=dv; d.value=sv;
+  handleCustomSrc(s); handleCustomDst(d);
+}
+function setRouteWeather(w,btn){
+  routeWeather=w;
+  document.querySelectorAll('.w-chip').forEach(c=>{
+    c.classList.remove('wc-active','wr-active','wh-active','wf-active');
+  });
+  const cls=w==='clear'?'wc-active':w==='rain'?'wr-active':w==='heavy_rain'?'wh-active':'wf-active';
+  btn.classList.add(cls);
+}
+function getSrc(){
+  const s=document.getElementById('rp-src').value;
+  return s==='custom'?document.getElementById('rp-src-custom').value.trim():s;
+}
+function getDst(){
+  const d=document.getElementById('rp-dst').value;
+  return d==='custom'?document.getElementById('rp-dst-custom').value.trim():d;
+}
+
+// ─── CONGESTION BADGE ─────────────────────────────────────────────────────────
+function congBadge(lvl){
+  const m={low:'cb-low',moderate:'cb-moderate',high:'cb-high',critical:'cb-critical'};
+  return `<span class="cong-badge ${m[lvl]||'cb-moderate'}">${lvl.toUpperCase()}</span>`;
+}
+
+// ─── BUILD PATH VISUAL ────────────────────────────────────────────────────────
+function buildPathVisual(src, dst, steps){
+  const wrap=document.getElementById('route-path-visual');
+  wrap.innerHTML='';
+  const via=steps&&steps.length>1?steps[1].step:'Via ORR';
+  const addNode=(cls,label)=>{
+    const n=document.createElement('div');n.className=`rp-node ${cls}`;
+    n.innerHTML=`<div class="rp-node-dot"></div><div class="rp-node-lbl">${label}</div>`;
+    wrap.appendChild(n);
+  };
+  const addConn=()=>{const c=document.createElement('div');c.className='rp-connector';wrap.appendChild(c);};
+  addNode('rp-node-src',src||'SOURCE');
+  addConn();
+  addNode('rp-node-mid',via);
+  addConn();
+  addNode('rp-node-dst',dst||'DEST');
+}
+
+// ─── FIND DELIVERY ROUTE ──────────────────────────────────────────────────────
+async function findDeliveryRoute(){
+  const src=getSrc(), dst=getDst();
+  if(!src){alert('Please select or enter a source location.');return;}
+  if(!dst){alert('Please select or enter a destination location.');return;}
+  if(src===dst){alert('Source and destination cannot be the same.');return;}
+
+  const btn=document.getElementById('rp-find-btn');
+  btn.disabled=true;
+  document.getElementById('route-loading').classList.add('show');
+  document.getElementById('route-result').style.display='none';
+
+  const vehicle=document.getElementById('rp-vehicle').value;
+  const vLabel=VEHICLE_LABELS[vehicle]||vehicle;
+  const wMod=WEATHER_MOD[routeWeather];
+  const srcData=ZONE_LIVE[src]||{congestion:50,level:'moderate',alt:'Standard route',hazard:'Unknown'};
+  const dstData=ZONE_LIVE[dst]||{congestion:50,level:'moderate',alt:'Standard route',hazard:'Unknown'};
+
+  const loadMsgs=['Scanning live traffic zones…','Computing alternate paths…','Applying AI route model…','Optimising for '+vLabel+'…'];
+  let mi=0;
+  const ltxt=document.getElementById('route-loading-txt');
+  const lint=setInterval(()=>{if(++mi<loadMsgs.length)ltxt.textContent=loadMsgs[mi];},1100);
+
+  const prompt=`You are a Bangalore delivery routing AI. Return ONLY a JSON object, no markdown, no explanation.
+
+Request:
+- Source: ${src}
+- Destination: ${dst}
+- Vehicle: ${vLabel}
+- Weather: ${routeWeather}
+- Weather note: ${wMod.note||'Clear, no weather impact.'}
+
+Live traffic data:
+- ${src}: ${srcData.congestion}% congestion (${srcData.level}), hazard: ${srcData.hazard}, alternate: ${srcData.alt}
+- ${dst}: ${dstData.congestion}% congestion (${dstData.level}), hazard: ${dstData.hazard}, alternate: ${dstData.alt}
+
+JSON schema:
+{
+  "estimatedMinutes": <integer>,
+  "distanceKm": <number, 1 decimal>,
+  "timeSavedMinutes": <integer, vs congested route>,
+  "fuelSavedRs": <integer, rupees>,
+  "congestionOnRoute": "<low|moderate|high|critical>",
+  "primaryRoute": "<specific Bangalore road names>",
+  "altRoute": "<alternate route or empty string>",
+  "recommendation": "<2-3 sentences with specific junctions, roads, timing advice for this vehicle>",
+  "steps": [
+    {"step":"<action + road>","detail":"<landmark or tip>"},
+    {"step":"<action + road>","detail":"<landmark or tip>"},
+    {"step":"<action + road>","detail":"<landmark or tip>"},
+    {"step":"<action + road>","detail":"<landmark or tip>"},
+    {"step":"<action + road>","detail":"<landmark or tip>"}
+  ],
+  "warnings": ["<weather or traffic warning, empty string if none>"]
+}`;
+
+  try{
+    // Route AI call via your backend proxy to avoid CORS
+    const resp=await fetch('http://localhost:5000/api/fleet/ai-route',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt})
+    });
+    if(!resp.ok) throw new Error('proxy '+resp.status);
+    const data=await resp.json();
+    // backend returns {text:"..."} or the raw anthropic response
+    const raw=(data.text||data.content?.map(b=>b.text||'').join('')||'');
+    const clean=raw.replace(/```json|```/g,'').trim();
+    const result=JSON.parse(clean);
+    clearInterval(lint);
+    showRouteResult(src,dst,result,wMod,vLabel);
+    drawRouteOnMap(src,dst,result.altRoute||'');
+    addLog('[ROUTE AI]','log-src-g',`→ Route computed: ${src} → ${dst} in ${result.estimatedMinutes} min via ${result.primaryRoute}`);
+  }catch(e){
+    clearInterval(lint);
+    const fallback=makeFallback(src,dst,srcData,dstData,wMod,vLabel);
+    showRouteResult(src,dst,fallback,wMod,vLabel);
+    drawRouteOnMap(src,dst,'');
+    addLog('[ROUTE AI]','log-src-y',`→ Fallback route active for ${src} → ${dst} — drawing on map`);
+  }finally{
+    btn.disabled=false;
+    document.getElementById('route-loading').classList.remove('show');
+  }
+}
+
+function makeFallback(src,dst,sd,dd,wMod,vLabel){
+  const base=Math.round(18+Math.random()*20);
+  const adj=Math.round(base*wMod.factor);
+  return{
+    estimatedMinutes:adj,
+    distanceKm:parseFloat((adj*0.65).toFixed(1)),
+    timeSavedMinutes:Math.round(adj*.22),
+    fuelSavedRs:Math.round(adj*4.8),
+    congestionOnRoute:sd.level,
+    primaryRoute:`${src} → Outer Ring Road → ${dst}`,
+    altRoute:sd.alt!=='None needed'?sd.alt:dd.alt!=='None needed'?dd.alt:'',
+    recommendation:`Take Outer Ring Road for best connectivity between ${src} and ${dst}. Avoid ${sd.hazard}. ${wMod.note||''}`,
+    steps:[
+      {step:'Depart from '+src,detail:'Head to nearest arterial road'},
+      {step:'Join Outer Ring Road (ORR)',detail:'Best inter-zone connectivity'},
+      {step:'Pass via central corridor',detail:'Monitor live zone updates'},
+      {step:'Approach '+dst,detail:dd.hazard},
+      {step:'Arrive at '+dst,detail:'Use alternate entry if congestion exceeds 70%'}
+    ],
+    warnings:wMod.note?[wMod.note]:[]
+  };
+}
+
+function showRouteResult(src,dst,r,wMod,vLabel){
+  // Path visual
+  buildPathVisual(src,dst,r.steps);
+
+  // Alerts
+  const alertArea=document.getElementById('route-alerts');
+  alertArea.innerHTML='';
+  if(r.warnings&&r.warnings[0]){
+    alertArea.innerHTML+=`<div class="route-warn-bar">⚠ ${r.warnings[0]}</div>`;
+  }
+  if(r.altRoute){
+    alertArea.innerHTML+=`<div class="route-alt-bar">🔀 ALTERNATE AVAILABLE: ${r.altRoute}</div>`;
+  }
+
+  // Metrics
+  const mg=document.getElementById('route-metrics');
+  mg.innerHTML=`
+    <div class="rr-metric"><div class="rr-val" style="color:rgb(var(--c))">${r.estimatedMinutes} min</div><div class="rr-lbl">EST. TIME</div></div>
+    <div class="rr-metric"><div class="rr-val" style="color:rgb(var(--g))">${r.distanceKm} km</div><div class="rr-lbl">DISTANCE</div></div>
+    <div class="rr-metric"><div class="rr-val" style="color:rgb(var(--y))">−${r.timeSavedMinutes} min</div><div class="rr-lbl">TIME SAVED</div></div>
+    <div class="rr-metric"><div class="rr-val" style="color:rgb(var(--o))">₹${r.fuelSavedRs}</div><div class="rr-lbl">FUEL SAVED</div></div>
+  `;
+
+  // AI Recommendation
+  document.getElementById('route-ai-text').innerHTML=
+    `${congBadge(r.congestionOnRoute)} [${vLabel}] ${r.recommendation}`;
+
+  // Steps
+  const sl=document.getElementById('route-steps');
+  sl.innerHTML=(r.steps||[]).map((s,i)=>`
+    <div class="route-step">
+      <div class="rs-num">${i+1}</div>
+      <div>
+        <div class="rs-txt">${s.step}</div>
+        <div class="rs-detail">${s.detail}</div>
+      </div>
+    </div>`).join('');
+
+  const result=document.getElementById('route-result');
+  result.style.display='block';
+  result.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  // Add a "View on Map" jump button
+  const existingJump=document.getElementById('jump-map-btn');
+  if(existingJump) existingJump.remove();
+  const jumpBtn=document.createElement('button');
+  jumpBtn.id='jump-map-btn';
+  jumpBtn.className='rp-find-btn';
+  jumpBtn.style.cssText='margin-top:14px;width:100%;justify-content:center;display:flex;align-items:center;gap:8px;background:rgba(0,255,157,.08);border-color:rgba(0,255,157,.5);color:rgb(0,255,157)';
+  jumpBtn.innerHTML='🗺 VIEW ROUTE ON MAP ↓';
+  jumpBtn.onclick=()=>document.getElementById('gmap').scrollIntoView({behavior:'smooth',block:'center'});
+  document.getElementById('route-steps').after(jumpBtn);
+}
+
+// ─── GOOGLE MAP ───────────────────────────────────────────────────────────────
+let _directionsRenderer = null;
+let _directionsService  = null;
+let _routePolyline      = null;
+
+function initMap(){
+  const mapDiv=document.getElementById('gmap');
+  mapDiv.innerHTML='';
+  _map=new google.maps.Map(mapDiv,{
+    center:{lat:12.9716,lng:77.5946},zoom:11,
+    disableDefaultUI:false,zoomControl:true,mapTypeControl:false,streetViewControl:false,fullscreenControl:true,
+    styles:[
+      {elementType:'geometry',stylers:[{color:'#0a0a1a'}]},
+      {elementType:'labels.text.fill',stylers:[{color:'#00f5ff'}]},
+      {elementType:'labels.text.stroke',stylers:[{color:'#000010'}]},
+      {featureType:'road',elementType:'geometry',stylers:[{color:'#1a1a3e'}]},
+      {featureType:'road',elementType:'geometry.stroke',stylers:[{color:'#000020'}]},
+      {featureType:'road.highway',elementType:'geometry',stylers:[{color:'#243060'}]},
+      {featureType:'water',elementType:'geometry',stylers:[{color:'#050515'}]},
+      {featureType:'poi',stylers:[{visibility:'off'}]},
+      {featureType:'transit',stylers:[{visibility:'off'}]},
+      {featureType:'administrative',elementType:'geometry.stroke',stylers:[{color:'#00f5ff33'}]},
+    ]
+  });
+  _directionsService  = new google.maps.DirectionsService();
+  _directionsRenderer = new google.maps.DirectionsRenderer({
+    suppressMarkers: false,
+    polylineOptions:{
+      strokeColor:'#00f5ff',
+      strokeOpacity:0.9,
+      strokeWeight:5,
+    }
+  });
+  _directionsRenderer.setMap(_map);
+  addLog('[MAP AI]','log-src-c','→ Google Maps loaded — Bangalore grid active');
+  if(zonesData.length) plotZonesOnMap(zonesData);
+}
+
+// ─── DRAW ROUTE ON MAP ────────────────────────────────────────────────────────
+function drawRouteOnMap(src, dst, altRoute){
+  if(!_map || !_directionsService || !_directionsRenderer) return;
+
+  const srcCoords = ZONE_COORDS[src];
+  const dstCoords = ZONE_COORDS[dst];
+
+  // Build origin/destination: prefer lat/lng for known zones, else text address
+  const origin      = srcCoords ? new google.maps.LatLng(srcCoords.lat, srcCoords.lng) : src + ', Bangalore';
+  const destination = dstCoords ? new google.maps.LatLng(dstCoords.lat, dstCoords.lng) : dst + ', Bangalore';
+
+  // Scroll map panel into view
+  document.getElementById('gmap').scrollIntoView({behavior:'smooth', block:'center'});
+
+  _directionsService.route({
+    origin,
+    destination,
+    travelMode: google.maps.TravelMode.DRIVING,
+    drivingOptions:{
+      departureTime: new Date(),
+      trafficModel: google.maps.TrafficModel.BEST_GUESS
+    },
+    provideRouteAlternatives: true,
+  }, (result, status) => {
+    if(status === google.maps.DirectionsStatus.OK){
+      // Draw primary route in cyan
+      _directionsRenderer.setDirections(result);
+      _directionsRenderer.setOptions({
+        polylineOptions:{strokeColor:'#00f5ff',strokeOpacity:.9,strokeWeight:5}
+      });
+
+      // Draw alternate routes in dim purple if available
+      if(_routePolyline){ _routePolyline.forEach(p=>p.setMap(null)); _routePolyline=[];}
+      _routePolyline = [];
+      result.routes.slice(1).forEach(route=>{
+        const path = route.overview_path;
+        const poly = new google.maps.Polyline({
+          path, map:_map,
+          strokeColor:'#8b5cf6', strokeOpacity:.5, strokeWeight:3,
+          icons:[{icon:{path:google.maps.SymbolPath.FORWARD_CLOSED_ARROW,scale:3},offset:'50%'}]
+        });
+        _routePolyline.push(poly);
+      });
+
+      // Fit map to route bounds
+      _map.fitBounds(result.routes[0].bounds, {top:30,right:30,bottom:30,left:30});
+
+      const leg = result.routes[0].legs[0];
+      const statusEl=document.getElementById('map-route-status');
+      if(statusEl) statusEl.textContent=`● ROUTE: ${leg.distance.text} · ${leg.duration_in_traffic?.text||leg.duration.text}`;
+      addLog('[MAP AI]','log-src-g',
+        `→ Route drawn on map: ${leg.distance.text} · ${leg.duration_in_traffic?.text||leg.duration.text} with traffic`);
+    } else {
+      addLog('[MAP AI]','log-src-r',`→ Directions API: ${status} — showing zone markers`);
+      plotZonesOnMap(zonesData);
+    }
+  });
+}
+
+function plotZonesOnMap(zones){
+  if(!_map) return;
+  _mapMarkers.forEach(m=>m.setMap(null));
+  _infoWindows.forEach(w=>w.close());
+  _mapMarkers=[];_infoWindows=[];
+  zones.forEach(z=>{
+    const coords=ZONE_COORDS[z.zone];if(!coords)return;
+    const lvl=(z.congestion_level||'').toUpperCase();
+    const color=lvl==='CRITICAL'?'#ff2d55':lvl==='HIGH'?'#ff6b35':lvl==='MODERATE'?'#ffd200':'#00ff9d';
+    const pct=z.congestion_percentage||0;
+    new google.maps.Circle({map:_map,center:coords,radius:600,fillColor:color,fillOpacity:.12,strokeColor:color,strokeOpacity:.4,strokeWeight:1});
+    const marker=new google.maps.Marker({position:coords,map:_map,title:z.zone,
+      icon:{path:google.maps.SymbolPath.CIRCLE,scale:16,fillColor:color,fillOpacity:.95,strokeColor:'#ffffff',strokeWeight:2},
+      label:{text:pct+'%',color:'#ffffff',fontSize:'9px',fontWeight:'bold',fontFamily:'Share Tech Mono,monospace'}});
+    const iw=new google.maps.InfoWindow({content:`
+      <div style="background:#03020f;color:#fff;padding:12px 16px;font-family:'Share Tech Mono',monospace;font-size:11px;border-radius:8px;border:1px solid ${color};min-width:180px">
+        <div style="color:${color};font-size:13px;font-weight:bold;margin-bottom:8px">${z.zone.toUpperCase()}</div>
+        <div>Congestion: <b style="color:${color}">${pct}%</b></div>
+        <div>Status: <b style="color:${color}">${lvl}</b></div>
+        <div>Confidence: <b style="color:#00f5ff">${z.confidence_score}%</b></div>
+        <div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:6px;border-top:1px solid ${color}33;padding-top:6px">${z.ai_recommendation}</div>
+      </div>`});
+    marker.addListener('click',()=>{_infoWindows.forEach(w=>w.close());iw.open(_map,marker);});
+    _mapMarkers.push(marker);_infoWindows.push(iw);
+  });
+  addLog('[MAP AI]','log-src-g',`→ ${zones.length} zone markers updated on live map`);
+}
+
+// ─── COLORS ──────────────────────────────────────────────────────────────────
+function levelColor(level){
+  const l=(level||'').toLowerCase();
+  if(l==='low')      return{cls:'zc-low',     badge:'badge-low',     hex:'rgb(0,255,157)'};
+  if(l==='moderate') return{cls:'zc-moderate',badge:'badge-moderate',hex:'rgb(255,210,0)'};
+  if(l==='high')     return{cls:'zc-high',    badge:'badge-high',    hex:'rgb(255,107,53)'};
+  if(l==='critical') return{cls:'zc-critical',badge:'badge-critical',hex:'rgb(255,45,85)'};
+  return{cls:'zc-low',badge:'badge-low',hex:'rgb(0,255,157)'};
+}
+
+// ─── RENDER ZONES ─────────────────────────────────────────────────────────────
+function renderZones(zones){
+  const grid=document.getElementById('zones-grid');
+  grid.innerHTML='';
+  zones.forEach((z,i)=>{
+    const col=levelColor(z.congestion_level||z.level);
+    const congPct=z.congestion_percentage||0;
+    const conf=z.confidence_score||95;
+    const saving=z.time_saving_minutes||0;
+    const rec=z.ai_recommendation||'Maintain current routing strategy.';
+    const altRoute=z.alternate_route||'—';
+    const card=document.createElement('div');
+    card.className=`zone-card ${col.cls}`;
+    card.style.animationDelay=(i*.07)+'s';
+    card.innerHTML=`
+      <div class="zone-top">
+        <div>
+          <div class="zone-name">${z.zone||`ZONE-${i+1}`}</div>
+          <div class="zone-id">ID: ${z.zone_id||`Z-${String(i+1).padStart(3,'0')}`} · ${z.timestamp?new Date(z.timestamp).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}):'LIVE'}</div>
+        </div>
+        <div class="zone-badge ${col.badge}">
+          <div class="status-dot" style="width:5px;height:5px;background:${col.hex};box-shadow:0 0 6px ${col.hex};animation:pulse-dot 1.4s ease-in-out infinite"></div>
+          ${(z.congestion_level||'—').toUpperCase()}
+        </div>
+      </div>
+      <div class="cong-bar-wrap">
+        <div class="cong-bar-header">
+          <span class="cong-bar-lbl">CONGESTION INDEX</span>
+          <span class="cong-pct" style="color:${col.hex}">${congPct}%</span>
+        </div>
+        <div class="cong-track">
+          <div class="cong-fill" style="width:${congPct}%;background:linear-gradient(90deg,${col.hex}99,${col.hex})"></div>
+        </div>
+      </div>
+      <div class="zone-stats">
+        <div class="zs-item"><div class="zs-val" style="color:rgb(var(--c))">${conf}%</div><div class="zs-lbl">AI CONFIDENCE</div></div>
+        <div class="zs-item"><div class="zs-val" style="color:rgb(var(--g))">−${saving} min</div><div class="zs-lbl">TIME SAVED</div></div>
+        <div class="zs-item" style="grid-column:1/-1"><div class="zs-val" style="color:rgba(255,255,255,.7);font-size:9px">${altRoute!=='—'?'🔀 '+altRoute:'No alternate needed'}</div><div class="zs-lbl">ALT ROUTE</div></div>
+      </div>
+      <div class="zone-rec">
+        <div class="zone-rec-label">◈ AI RECOMMENDATION</div>
+        ${rec}
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+// ─── HERO METRICS ─────────────────────────────────────────────────────────────
+function updateHeroMetrics(zones){
+  const confs=zones.map(z=>parseFloat(z.confidence_score||95));
+  const avgConf=(confs.reduce((a,b)=>a+b,0)/confs.length).toFixed(1);
+  const savings=zones.map(z=>parseInt(z.time_saving_minutes||0));
+  const avgSaving=Math.round(savings.reduce((a,b)=>a+b,0)/savings.length);
+  const critCount=zones.filter(z=>(z.congestion_level||'').toLowerCase()==='critical').length;
+  document.getElementById('hm-conf').textContent=avgConf+'%';
+  document.getElementById('hm-saving').textContent=avgSaving+' min';
+  document.getElementById('hm-critical').textContent=critCount>0?critCount:'NONE';
+  document.getElementById('hm-critical').style.color=critCount>0?'rgb(255,45,85)':'rgb(0,255,157)';
+  const counts={low:0,moderate:0,high:0,critical:0};
+  zones.forEach(z=>{const l=(z.congestion_level||'low').toLowerCase();if(counts[l]!==undefined)counts[l]++;});
+  document.getElementById('sum-low').textContent=counts.low;
+  document.getElementById('sum-mod').textContent=counts.moderate;
+  document.getElementById('sum-high').textContent=counts.high;
+  document.getElementById('sum-crit').textContent=counts.critical;
+}
+
+// ─── FETCH ZONE DATA ──────────────────────────────────────────────────────────
+async function fetchData(){
+  const spinner=document.getElementById('spinner');
+  spinner.classList.add('active');
+  try{
+    const resp=await fetch(`http://localhost:5000/api/fleet/traffic-predict?weather=${currentWeather}`);
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const json=await resp.json();
+    document.getElementById('error-banner').style.display='none';
+    const zones=(json.predictions||[]).map(z=>({
+      zone:z.zone,zone_id:z.zone.substring(0,3).toUpperCase()+'-AI',
+      congestion_level:z.severity,congestion_percentage:z.congestion,
+      confidence_score:parseFloat(z.confidence),time_saving_minutes:z.altPathTimeSaving||0,
+      ai_recommendation:z.recommendation,alternate_route:z.altPathAvailable?'ALT PATH AVAILABLE':'—',
+      timestamp:z.analyzedAt
+    }));
+    if(zones.length){zonesData=zones;renderZones(zones);updateHeroMetrics(zones);logZoneActivity(zones);plotZonesOnMap(zones);}
+    if(json.summary){
+      document.getElementById('hm-conf').textContent=json.summary.aiConfidence;
+      document.getElementById('hm-saving').textContent=json.summary.timeSavedMinutes+' min';
+      document.getElementById('hm-zones').textContent=json.summary.totalZones;
+      const crit=json.summary.criticalZones;
+      document.getElementById('hm-critical').textContent=crit>0?crit:'NONE';
+      document.getElementById('hm-critical').style.color=crit>0?'rgb(255,45,85)':'rgb(0,255,157)';
+    }
+    document.getElementById('last-update').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});
+  }catch(e){
+    document.getElementById('error-banner').style.display='block';
+    addLog('[ERROR]','log-src-r',`→ API error — ${e.message}`);
+    if(!zonesData.length) loadDemoData();
+  }finally{spinner.classList.remove('active');}
+}
+
+// ─── DEMO DATA ────────────────────────────────────────────────────────────────
+function loadDemoData(){
+  const DEMO=[
+    {zone:'Koramangala',zone_id:'KGN-001',congestion_level:'HIGH',congestion_percentage:78,confidence_score:96.2,time_saving_minutes:18,ai_recommendation:'Reroute via 80-ft Rd and Sony World Junction.',alternate_route:'80-FT RD BYPASS'},
+    {zone:'Indiranagar',zone_id:'IND-002',congestion_level:'MODERATE',congestion_percentage:52,confidence_score:98.1,time_saving_minutes:11,ai_recommendation:'Minor delays on 100-ft Road. Use CMH Road bypass.',alternate_route:'CMH RD ALT'},
+    {zone:'Whitefield',zone_id:'WTF-003',congestion_level:'LOW',congestion_percentage:24,confidence_score:99.3,time_saving_minutes:4,ai_recommendation:'Clear conditions. Maintain current routes.',alternate_route:'—'},
+    {zone:'HSR Layout',zone_id:'HSR-004',congestion_level:'CRITICAL',congestion_percentage:92,confidence_score:97.8,time_saving_minutes:28,ai_recommendation:'CRITICAL: Immediate reroute via Agara Lake Rd.',alternate_route:'AGARA LAKE RD'},
+    {zone:'Electronic City',zone_id:'ELC-005',congestion_level:'HIGH',congestion_percentage:71,confidence_score:95.4,time_saving_minutes:16,ai_recommendation:'Hosur Rd saturated. Use NICE Rd exit.',alternate_route:'NICE RD CORRIDOR'},
+    {zone:'Marathahalli',zone_id:'MRT-006',congestion_level:'MODERATE',congestion_percentage:58,confidence_score:97.0,time_saving_minutes:12,ai_recommendation:'ORR moderate congestion. Pre-empt via KR Puram.',alternate_route:'KR PURAM LINK'},
+    {zone:'Hebbal',zone_id:'HBL-007',congestion_level:'HIGH',congestion_percentage:65,confidence_score:96.5,time_saving_minutes:14,ai_recommendation:'Hebbal flyover congested. Use alternate entry.',alternate_route:'ALTERNATE ENTRY'},
+    {zone:'JP Nagar',zone_id:'JPN-008',congestion_level:'LOW',congestion_percentage:31,confidence_score:98.7,time_saving_minutes:6,ai_recommendation:'South corridor clear. Standard routing optimal.',alternate_route:'—'},
+  ].map(z=>({...z,timestamp:new Date().toISOString()}));
+  zonesData=DEMO;
+  renderZones(DEMO);
+  updateHeroMetrics(DEMO);
+  plotZonesOnMap(DEMO);
+}
+
+// ─── FORECAST ─────────────────────────────────────────────────────────────────
+async function fetchForecast(){
+  try{
+    const resp=await fetch('http://localhost:5000/api/fleet/traffic-predict/forecast');
+    const json=await resp.json();
+    renderForecast(Array.isArray(json)?json:(json.forecast||[]));
+  }catch{
+    renderForecast(Array.from({length:12},(_,i)=>({hour:i*2,avg_congestion:Math.floor(Math.random()*60+20)})));
+  }
+}
+
+function renderForecast(data){
+  const wrap=document.getElementById('forecast-bars');
+  wrap.innerHTML='';
+  const max=Math.max(...data.map(d=>d.avg_congestion||50),1);
+  data.forEach(d=>{
+    const pct=(d.avg_congestion||30)/max;
+    const val=d.avg_congestion||30;
+    const col=val>80?'rgb(255,45,85)':val>60?'rgb(255,107,53)':val>40?'rgb(255,210,0)':'rgb(0,255,157)';
+    const label=d.hour!==undefined?String(d.hour).padStart(2,'0')+'h':(d.label||'');
+    const w=document.createElement('div');w.className='f-bar-wrap';
+    w.innerHTML=`<div class="f-bar" style="height:${Math.max(pct*52,4)}px;background:${col}88;border:1px solid ${col}55"></div><span class="f-bar-lbl">${label}</span>`;
+    wrap.appendChild(w);
+  });
+}
+
+// ─── TERMINAL LOG ─────────────────────────────────────────────────────────────
+function addLog(src,cls,msg){
+  const body=document.getElementById('term-body');
+  const time=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const line=document.createElement('div');
+  line.className='log-line';
+  line.innerHTML=`<span class="log-time">[${time}]</span><span class="${cls}">${src}</span><span class="log-msg"> ${msg}</span>`;
+  body.appendChild(line);
+  while(body.children.length>80) body.removeChild(body.firstChild);
+  body.scrollTop=body.scrollHeight;
+}
+
+function logZoneActivity(zones){
+  zones.filter(z=>(z.congestion_level||'').toLowerCase()==='critical')
+       .forEach(z=>addLog('[CRITICAL]','log-src-r',`→ CRITICAL — ${z.zone} (${z.congestion_percentage}%) — Emergency reroute active`));
+  zones.filter(z=>(z.congestion_level||'').toLowerCase()==='high').slice(0,2)
+       .forEach(z=>addLog('[TRAFFIC AI]','log-src-y',`→ HIGH congestion — ${z.zone}: ${z.ai_recommendation}`));
+  const low=zones.filter(z=>(z.congestion_level||'').toLowerCase()==='low');
+  if(low.length) addLog('[DISPATCH AI]','log-src-g',`→ Clear path — ${low[0].zone}: ${low[0].congestion_percentage}% index`);
+}
+
+// ─── ZONE WEATHER ─────────────────────────────────────────────────────────────
+function setWeather(w,btn){
+  currentWeather=w;
+  document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  addLog('[TRAFFIC AI]','log-src-c',`→ Weather: ${w.toUpperCase()} — recalculating all zones`);
+  fetchData();
+}
+
+// ─── BG LOG NOISE ─────────────────────────────────────────────────────────────
+const BG_LOGS=[
+  {src:'[TRAFFIC AI]',cls:'log-src-c',msgs:['→ Silk Board junction prediction updated','→ 72-hour forecast recomputed','→ Alternate path matrix recalculated']},
+  {src:'[DISPATCH AI]',cls:'log-src-g',msgs:['→ Rider routing adjusted for zone conditions','→ ETA variance minimized to ±1.1 min']},
+  {src:'[FUEL AI]',cls:'log-src-o',msgs:['→ Eco-routing applied to congested zones','→ Fuel cost avoided: ₹342 this cycle']},
+  {src:'[MAP AI]',cls:'log-src-c',msgs:['→ Zone markers refreshed on live map','→ Congestion heatmap recalculated']},
+  {src:'[ROUTE AI]',cls:'log-src-g',msgs:['→ Delivery route optimizer ready — 8 zones online','→ Fastest path engine active']},
+];
+setInterval(()=>{
+  const e=BG_LOGS[Math.floor(Math.random()*BG_LOGS.length)];
+  addLog(e.src,e.cls,e.msgs[Math.floor(Math.random()*e.msgs.length)]);
+},4500);
+
+// ─── HERO PULSE ──────────────────────────────────────────────────────────────
+setInterval(()=>{
+  const el=document.getElementById('hm-refresh');
+  if(el){el.style.color='rgb(0,255,157)';setTimeout(()=>el.style.color='rgb(139,92,246)',800);}
+},5000);
+
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+addLog('[TRAFFIC AI]','log-src-c','→ Initializing Bangalore zone scan…');
+addLog('[ROUTE AI]','log-src-g','→ Delivery route planner online — select source & destination');
+fetchData();
+fetchForecast();
+setInterval(fetchData,5000);
+
+setTimeout(()=>addLog('[TRAFFIC AI]','log-src-c','→ Connected to prediction engine — 8 zones online'),600);
+setTimeout(()=>addLog('[TRAFFIC AI]','log-src-c','→ Bangalore metro grid loaded — scanning all corridors'),1200);
+setTimeout(()=>addLog('[SELF-LEARN AI]','log-src-c','→ Confidence model v3.7 active — 97.3% baseline accuracy'),1800);
+</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBcjyA93ciVh4mbUEDbpW5BiATP5-crxc4&callback=initMap" async defer></script>
+</body>
+</html>

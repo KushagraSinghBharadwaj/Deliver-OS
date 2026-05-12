@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>GTI Fleet AI — Route Optimization Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --c:0,245,255;--p:139,92,246;--g:0,255,157;--y:255,210,0;
+  --r:255,45,85;--o:255,107,53;--bg:#00000a;--bg2:#03020f;--bg3:#060318;
+}
+body{background:var(--bg);color:#fff;font-family:'Exo 2',sans-serif;overflow-x:hidden}
+.mono{font-family:'Share Tech Mono',monospace}
+.orb{font-family:'Orbitron',monospace}
+canvas{display:block}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:#000}
+::-webkit-scrollbar-thumb{background:rgba(var(--c),.35);border-radius:2px}
+
+/* ANIMATIONS */
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.6)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes fadein{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.3);opacity:1}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes slidedown{from{opacity:0;transform:translate(-50%,-50%) scale(.92)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes bar-grow{from{height:4px}to{height:var(--h)}}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 20px rgba(var(--c),.3)}50%{box-shadow:0 0 50px rgba(var(--c),.7)}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+
+/* SCANLINES */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:999}
+
+/* NAV */
+#nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:10px 24px;background:rgba(0,0,10,.92);border-bottom:1px solid rgba(var(--c),.12);backdrop-filter:blur(20px)}
+.nav-brand{display:flex;align-items:center;gap:12px}
+.nav-icon{font-size:20px}
+.nav-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,rgb(var(--c)),rgb(var(--p)));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-sub{font-size:8px;color:rgba(var(--c),.5);font-family:'Share Tech Mono',monospace;letter-spacing:2px;margin-top:2px}
+.nav-right{display:flex;align-items:center;gap:16px}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1.5px}
+.status-dot{width:7px;height:7px;border-radius:50%;animation:pulse-dot 1.4s ease-in-out infinite;flex-shrink:0}
+.dot-c{background:rgb(var(--c));box-shadow:0 0 8px rgb(var(--c))}
+.dot-g{background:rgb(var(--g));box-shadow:0 0 8px rgb(var(--g))}
+.dot-p{background:rgb(var(--p));box-shadow:0 0 8px rgb(var(--p))}
+.dot-y{background:rgb(var(--y));box-shadow:0 0 8px rgb(var(--y))}
+.dot-r{background:rgb(var(--r));box-shadow:0 0 8px rgb(var(--r))}
+.dot-o{background:rgb(var(--o));box-shadow:0 0 8px rgb(var(--o))}
+#nav-clock{font-size:9px;color:rgba(255,255,255,.3);font-family:'Share Tech Mono',monospace}
+
+/* HERO */
+#hero{position:relative;padding:44px 24px 36px;text-align:center;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(var(--p),.08) 0%,transparent 70%);overflow:hidden}
+#neural-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero-inner{position:relative;z-index:2}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;padding:5px 18px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgb(var(--c));background:rgba(var(--c),.07);border:1px solid rgba(var(--c),.3);margin-bottom:14px}
+.hero-title{font-family:'Orbitron',monospace;font-size:clamp(32px,5vw,56px);font-weight:900;letter-spacing:5px;background:linear-gradient(135deg,#fff 0%,rgb(var(--c)) 40%,rgb(var(--p)) 80%,#fff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;line-height:1.1}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.45);letter-spacing:4px;margin-bottom:6px}
+.hero-desc{font-size:10px;color:rgb(var(--c));font-family:'Share Tech Mono',monospace;letter-spacing:2px;margin-bottom:32px}
+.decision-counter{font-family:'Orbitron',monospace;font-size:13px;color:rgb(var(--y));display:inline}
+.hero-metrics{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.h-metric{padding:12px 18px;background:rgba(255,255,255,.03);border:1px solid rgba(var(--c),.18);border-radius:12px;text-align:center;min-width:100px;backdrop-filter:blur(8px)}
+.h-metric-val{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:rgb(var(--c));transition:all .5s}
+.h-metric-lbl{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-top:3px}
+
+/* GLOW DIVIDER */
+.glow-div{height:1px;background:linear-gradient(90deg,transparent,rgba(var(--c),.4),rgba(var(--p),.4),transparent);margin:0}
+
+/* SECTIONS */
+.section{padding:32px 20px;max-width:1400px;margin:0 auto}
+.sec-tag{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:3px;color:rgba(var(--c),.7);margin-bottom:6px}
+.sec-title{font-family:'Orbitron',monospace;font-size:clamp(16px,2.5vw,24px);font-weight:700;color:#fff;margin-bottom:4px}
+.sec-sub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:24px}
+
+/* PANELS */
+.panel{background:rgba(3,2,15,.92);border:1px solid rgba(var(--c),.18);border-radius:16px;position:relative;overflow:hidden;backdrop-filter:blur(10px)}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--c)),transparent);opacity:.7}
+
+/* MAP SECTION */
+#map-grid{display:grid;grid-template-columns:1fr 380px;gap:16px;min-height:440px}
+#map-wrap{position:relative;border-radius:16px;overflow:hidden;background:#000510;border:1px solid rgba(var(--c),.18)}
+#city-canvas{width:100%;height:380px;display:block}
+.map-top-left{position:absolute;top:10px;left:14px;z-index:10;font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:rgb(var(--c));letter-spacing:2px}
+.map-top-right{position:absolute;top:10px;right:14px;z-index:10;display:flex;gap:10px;align-items:center;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.4)}
+.map-legend-item{display:inline-flex;align-items:center;gap:4px}
+.map-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.map-footer{padding:8px 14px;border-top:1px solid rgba(var(--c),.08);display:flex;gap:16px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(255,255,255,.35)}
+#flash-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;padding:8px 20px;background:rgba(0,0,10,.92);border:1px solid rgb(var(--c));border-radius:8px;font-family:'Share Tech Mono',monospace;font-size:11px;color:rgb(var(--c));letter-spacing:2px;white-space:nowrap;box-shadow:0 0 30px rgba(var(--c),.4);display:none;animation:slidedown .3s ease}
+
+/* RIGHT COLUMN */
+.right-col{display:flex;flex-direction:column;gap:16px}
+
+/* TERMINAL */
+#terminal{border-radius:14px;background:rgba(0,0,8,.95);border:1px solid rgba(var(--c),.2);overflow:hidden;flex:1}
+.term-header{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(var(--c),.04);border-bottom:1px solid rgba(var(--c),.1)}
+.term-dot{width:10px;height:10px;border-radius:50%}
+.term-title-txt{font-size:10px;font-family:'Share Tech Mono',monospace;color:rgba(var(--c),.7);letter-spacing:2px;margin-left:6px}
+.live-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:20px;font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1.5px}
+.lb-c{background:rgba(var(--c),.08);color:rgb(var(--c));border:1px solid rgba(var(--c),.35)}
+.lb-g{background:rgba(var(--g),.08);color:rgb(var(--g));border:1px solid rgba(var(--g),.35)}
+.lb-p{background:rgba(var(--p),.08);color:rgb(var(--p));border:1px solid rgba(var(--p),.35)}
+.term-body{padding:14px;height:230px;overflow-y:auto;font-family:'Share Tech Mono',monospace;font-size:10.5px;line-height:1.9}
+.log-line{display:flex;gap:8px;animation:fadein .3s ease}
+.log-time{color:rgba(255,255,255,.22);min-width:72px}
+.log-c{color:rgb(var(--c))}
+.log-y{color:rgb(var(--y))}
+.log-p{color:rgb(var(--p))}
+.log-g{color:rgb(var(--g))}
+.log-o{color:rgb(var(--o))}
+.log-r{color:rgb(var(--r))}
+.log-msg{color:rgba(255,255,255,.6)}
+.cursor-blink{display:inline-block;width:7px;height:12px;background:rgb(var(--c));animation:blink .8s step-end infinite;margin-left:3px}
+
+/* QUICK STATS */
+.quick-stats{border-radius:14px;background:rgba(3,2,15,.9);border:1px solid rgba(var(--p),.18);padding:16px;position:relative;overflow:hidden}
+.quick-stats::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--p)),transparent)}
+.qs-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qs-card{background:rgba(255,255,255,.03);border-radius:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.06)}
+.qs-val{font-family:'Orbitron',monospace;font-size:16px;font-weight:700}
+.qs-lbl{font-size:8px;color:rgba(255,255,255,.3);letter-spacing:1px;margin-top:2px}
+
+/* AI MODULES */
+.modules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.modules-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:580px){.modules-grid{grid-template-columns:1fr}}
+.module-card{border-radius:16px;padding:18px;background:rgba(3,2,15,.9);position:relative;overflow:hidden;cursor:pointer;transition:transform .3s,box-shadow .3s;border:1px solid}
+.module-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,currentColor,transparent);opacity:.7}
+.module-card::after{content:'';position:absolute;right:-20px;bottom:-20px;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,currentColor 0%,transparent 70%);opacity:.12;animation:breathe 3s ease-in-out infinite}
+.module-card:hover{transform:translateY(-4px)}
+.mc-amber{border-color:rgba(var(--y),.3);color:rgb(var(--y))}.mc-amber:hover{box-shadow:0 0 35px rgba(var(--y),.25)}
+.mc-cyan{border-color:rgba(var(--c),.3);color:rgb(var(--c))}.mc-cyan:hover{box-shadow:0 0 35px rgba(var(--c),.25)}
+.mc-green{border-color:rgba(var(--g),.3);color:rgb(var(--g))}.mc-green:hover{box-shadow:0 0 35px rgba(var(--g),.25)}
+.mc-orange{border-color:rgba(var(--o),.3);color:rgb(var(--o))}.mc-orange:hover{box-shadow:0 0 35px rgba(var(--o),.25)}
+.mc-red{border-color:rgba(var(--r),.3);color:rgb(var(--r))}.mc-red:hover{box-shadow:0 0 35px rgba(var(--r),.25)}
+.mc-purple{border-color:rgba(var(--p),.3);color:rgb(var(--p))}.mc-purple:hover{box-shadow:0 0 35px rgba(var(--p),.25)}
+.mod-icon{font-size:26px;margin-bottom:10px}
+.mod-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.mod-name{font-family:'Orbitron',monospace;font-size:10.5px;font-weight:700;letter-spacing:2px}
+.mod-role{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1px;opacity:.5;margin-bottom:12px}
+.mod-features{list-style:none;margin-bottom:14px}
+.mod-features li{font-size:9.5px;color:rgba(255,255,255,.55);margin-bottom:3px;padding-left:12px;position:relative}
+.mod-features li::before{content:'›';position:absolute;left:0;color:currentColor;opacity:.9}
+.mod-footer{display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid rgba(255,255,255,.06);padding-top:10px;margin-top:8px}
+.mod-conf{font-family:'Orbitron',monospace;font-size:20px;font-weight:700}
+.mod-conf-lbl{font-size:8px;opacity:.4;margin-top:2px}
+.mini-bars{display:flex;align-items:flex-end;gap:2px;height:36px}
+.mini-bar{width:4px;border-radius:2px;opacity:.85;transition:height .5s ease;background:currentColor}
+
+/* RIDERS */
+.riders-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:900px){.riders-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.riders-grid{grid-template-columns:1fr}}
+.rider-card{background:rgba(3,2,15,.9);border:1px solid rgba(var(--c),.15);border-radius:14px;padding:14px;position:relative;overflow:hidden}
+.rc-top{position:absolute;top:0;left:0;right:0;height:1px}
+.rider-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.rider-id{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:rgb(var(--c));letter-spacing:2px}
+.rider-status{font-size:8px;font-family:'Share Tech Mono',monospace;padding:2px 8px;border-radius:10px;display:flex;align-items:center;gap:4px}
+.rider-name{font-size:11px;color:rgba(255,255,255,.85);margin-bottom:8px;font-weight:600}
+.rider-row{display:flex;justify-content:space-between;margin-bottom:4px}
+.rider-row-lbl{font-size:9px;color:rgba(255,255,255,.35);font-family:'Share Tech Mono',monospace}
+.rider-row-val{font-size:9px;font-family:'Share Tech Mono',monospace;font-weight:600}
+.rider-bar{margin-top:8px;height:3px;background:rgba(255,255,255,.06);border-radius:2px}
+.rider-bar-fill{height:100%;background:linear-gradient(90deg,rgb(var(--c)),rgb(var(--p)));border-radius:2px;transition:width 1s ease}
+
+/* ANALYTICS */
+.analytics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:900px){.analytics-grid{grid-template-columns:repeat(2,1fr)}}
+.ana-card{border-radius:14px;padding:16px;background:rgba(3,2,15,.9);border:1px solid rgba(255,255,255,.07);position:relative;overflow:hidden}
+.ana-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.ana-c::after{background:linear-gradient(90deg,transparent,rgb(var(--c)),transparent)}
+.ana-g::after{background:linear-gradient(90deg,transparent,rgb(var(--g)),transparent)}
+.ana-p::after{background:linear-gradient(90deg,transparent,rgb(var(--p)),transparent)}
+.ana-y::after{background:linear-gradient(90deg,transparent,rgb(var(--y)),transparent)}
+.ana-icon{font-size:20px;margin-bottom:8px}
+.ana-val{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;margin-bottom:2px;transition:all .5s}
+.ana-lbl{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1px;margin-bottom:6px}
+.ana-change{font-size:9px;font-family:'Share Tech Mono',monospace;color:rgb(var(--g));margin-bottom:8px}
+.sparkline-wrap{height:32px;position:relative}
+.sparkline{width:100%;height:100%}
+
+/* GAUGES */
+.gauges-panel{border-radius:16px;padding:24px;background:rgba(3,2,15,.9);border:1px solid rgba(var(--c),.18);position:relative;overflow:hidden}
+.gauges-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--c)),rgb(var(--p)),transparent)}
+.gauges-row{display:flex;justify-content:space-around;flex-wrap:wrap;gap:20px;margin-top:16px}
+.gauge-wrap{text-align:center}
+.gauge-lbl{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1px;margin-top:4px}
+
+/* SELF LEARNING */
+.learn-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:800px){.learn-grid{grid-template-columns:1fr}}
+.learn-panel{border-radius:16px;padding:28px;background:rgba(3,2,15,.9);border:1px solid rgba(var(--c),.18);position:relative;overflow:hidden}
+.learn-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgb(var(--p)),rgb(var(--c)),transparent)}
+.learn-bar-wrap{margin-bottom:10px}
+.learn-bar-head{display:flex;justify-content:space-between;margin-bottom:5px}
+.learn-bar-lbl{font-size:10px;color:rgba(255,255,255,.55)}
+.learn-bar-val{font-size:10px;font-family:'Orbitron',monospace}
+.learn-bar-track{height:4px;background:rgba(255,255,255,.06);border-radius:2px}
+.learn-bar-fill{height:100%;border-radius:2px;transition:width 1.5s ease}
+.learn-log{background:rgba(0,0,8,.8);border-radius:12px;padding:14px;height:320px;overflow-y:auto;border:1px solid rgba(var(--p),.2);font-family:'Share Tech Mono',monospace;font-size:10px;line-height:1.9}
+.llog-line{display:flex;gap:8px;margin-bottom:4px}
+.llog-time{color:rgba(255,255,255,.2);min-width:44px}
+
+/* FOOTER */
+#footer{border-top:1px solid rgba(var(--c),.1);padding:24px;text-align:center;background:rgba(0,0,5,.8)}
+.footer-logo{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,rgb(var(--c)),rgb(var(--p)));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.footer-sub{font-size:9px;color:rgba(255,255,255,.25);font-family:'Share Tech Mono',monospace;letter-spacing:2px;margin-bottom:12px}
+.footer-stats{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
+.f-stat{font-size:9px;font-family:'Share Tech Mono',monospace;display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.4)}
+
+/* BACK LINK */
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:9px;font-family:'Share Tech Mono',monospace;color:rgba(var(--c),.6);text-decoration:none;letter-spacing:1.5px;padding:4px 12px;border:1px solid rgba(var(--c),.2);border-radius:20px;transition:all .2s}
+.back-link:hover{color:rgb(var(--c));border-color:rgba(var(--c),.5);box-shadow:0 0 12px rgba(var(--c),.2)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-brand">
+    <span class="nav-icon">🛸</span>
+    <div>
+      <div class="nav-title">GTI FLEET AI</div>
+      <div class="nav-sub">ROUTE OPTIMIZATION ENGINE v3.7</div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="status-pill"><div class="status-dot dot-c"></div><span style="color:rgba(0,245,255,.7)">6 AI MODULES ACTIVE</span></div>
+    <div class="status-pill"><div class="status-dot dot-g" style="animation-delay:.4s"></div><span style="color:rgba(0,255,157,.7)">AUTONOMOUS OPS</span></div>
+    <span id="nav-clock" class="mono"></span>
+    <a href="index.html" class="back-link" onclick="if(document.referrer)history.back(),event.preventDefault()">← BACK TO CEO</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="neural-canvas"></canvas>
+  <div class="hero-inner">
+    <div class="hero-tag"><div class="status-dot dot-c"></div>AUTONOMOUS ROUTE OPTIMIZATION INTELLIGENCE LAYER</div>
+    <h1 class="hero-title">GTI FLEET AI</h1>
+    <p class="hero-sub">EVERY ROUTE. EVERY RIDER. EVERY MILLISECOND. AUTONOMOUS.</p>
+    <p class="hero-desc mono">DECISIONS / MINUTE: <span class="decision-counter" id="dec-counter">48,312</span></p>
+    <div class="hero-metrics">
+      <div class="h-metric"><div class="h-metric-val" id="hm-routes">847</div><div class="h-metric-lbl">ROUTES/MIN</div></div>
+      <div class="h-metric"><div class="h-metric-val" id="hm-speed" style="color:rgb(var(--g))">312ms</div><div class="h-metric-lbl">OPT SPEED</div></div>
+      <div class="h-metric"><div class="h-metric-val" id="hm-cong" style="color:rgb(var(--y))">6.4/10</div><div class="h-metric-lbl">CONGESTION</div></div>
+      <div class="h-metric"><div class="h-metric-val" id="hm-fuel" style="color:rgb(var(--o))">+18.3%</div><div class="h-metric-lbl">FUEL GAIN</div></div>
+      <div class="h-metric"><div class="h-metric-val" id="hm-util" style="color:rgb(var(--p))">94.2%</div><div class="h-metric-lbl">UTILIZATION</div></div>
+      <div class="h-metric"><div class="h-metric-val" id="hm-dist" style="color:rgb(var(--g))">41.6%</div><div class="h-metric-lbl">DIST REDUCED</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-div"></div>
+
+<!-- MAP + TERMINAL -->
+<div class="section">
+  <div id="map-grid">
+    <!-- CITY MAP -->
+    <div id="map-wrap">
+      <div class="map-top-left">LIVE CITY OPERATIONS</div>
+      <div class="map-top-right">
+        <span class="map-legend-item"><span class="map-dot" style="background:rgb(var(--c))"></span>RIDER</span>
+        <span class="map-legend-item"><span class="map-dot" style="background:rgb(var(--y));border-radius:2px"></span>DARK-STORE</span>
+        <span class="map-legend-item"><span class="map-dot" style="background:rgba(var(--o),.7)"></span>SURGE</span>
+        <div class="live-badge lb-c" style="margin-left:8px"><div class="status-dot dot-c"></div>AI TRACKING</div>
+      </div>
+      <div id="flash-label"></div>
+      <canvas id="city-canvas"></canvas>
+      <div class="map-footer">
+        <span><span style="color:rgb(var(--c))">16</span> ACTIVE RIDERS</span>
+        <span><span style="color:rgb(var(--y))">5</span> DARK STORES</span>
+        <span><span style="color:rgb(var(--o))">4</span> SURGE ZONES</span>
+        <span><span style="color:rgb(var(--g))">847</span> ROUTES/MIN</span>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-col">
+      <!-- TERMINAL -->
+      <div id="terminal">
+        <div class="term-header">
+          <div class="term-dot" style="background:#ff5f57"></div>
+          <div class="term-dot" style="background:#ffbd2e"></div>
+          <div class="term-dot" style="background:#28c840"></div>
+          <span class="term-title-txt">GTI-FLEET-AI — autonomous_decision_stream</span>
+          <div class="live-badge lb-c" style="margin-left:auto"><div class="status-dot dot-c"></div>STREAMING</div>
+        </div>
+        <div class="term-body" id="term-body"></div>
+      </div>
+
+      <!-- QUICK STATS -->
+      <div class="quick-stats">
+        <div class="sec-tag" style="margin-bottom:12px">◈ SYSTEM PULSE</div>
+        <div class="qs-grid">
+          <div class="qs-card"><div class="qs-val" style="color:rgb(var(--g))">98.7%</div><div class="qs-lbl">SUCCESS RATE</div></div>
+          <div class="qs-card"><div class="qs-val" style="color:rgb(var(--c))">22min</div><div class="qs-lbl">AVG DELIVERY</div></div>
+          <div class="qs-card"><div class="qs-val" style="color:rgb(var(--o))">₹18.4K</div><div class="qs-lbl">FUEL SAVED</div></div>
+          <div class="qs-card"><div class="qs-val" style="color:rgb(var(--p))">1,847</div><div class="qs-lbl">FAILURES PREV.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- AI MODULES -->
+<div class="section">
+  <p class="sec-tag">◈ AUTONOMOUS AI ENGINE</p>
+  <h2 class="sec-title">6 Neural Intelligence Modules</h2>
+  <p class="sec-sub">Each module operating autonomously — no human oversight, no manual input.</p>
+  <div class="modules-grid">
+
+    <div class="module-card mc-amber" onclick="window.location.href='traffic-predict.html'" style="cursor:pointer">
+      <div class="mod-icon">🚦</div>
+      <div class="mod-head">
+        <div class="mod-name">TRAFFIC PREDICT AI</div>
+        <div class="live-badge" style="background:rgba(255,210,0,.1);color:rgb(var(--y));border:1px solid rgba(255,210,0,.35);padding:2px 8px;border-radius:20px;font-size:8px;font-family:'Share Tech Mono',monospace;display:inline-flex;align-items:center;gap:4px"><div class="status-dot dot-y" style="width:5px;height:5px"></div>PREDICTING</div>
+      </div>
+      <div class="mod-role">CONGESTION FORECASTER</div>
+      <ul class="mod-features">
+        <li>Real-time road density analysis</li><li>72-hour congestion lookahead</li>
+        <li>Alternate path generation &lt;0.5s</li><li>Weather impact integration</li><li>City-wide surge prediction</li>
+      </ul>
+      <div class="mod-footer">
+        <div><div class="mod-conf" id="mc-conf-0">97.3%</div><div class="mod-conf-lbl">AI CONFIDENCE</div></div>
+        <div class="mini-bars" id="mc-bars-0"></div>
+      </div>
+    </div>
+
+    <div class="module-card mc-cyan" onclick="window.location.href='smart-dispatch.html'" style="cursor:pointer">
+      <div class="mod-icon">🎯</div>
+      <div class="mod-head">
+        <div class="mod-name">SMART DISPATCH AI</div>
+        <div class="live-badge lb-c" style="padding:2px 8px;font-size:8px;display:inline-flex;align-items:center;gap:4px"><div class="status-dot dot-c" style="width:5px;height:5px"></div>DISPATCHING</div>
+      </div>
+      <div class="mod-role">RIDER ASSIGNMENT ENGINE</div>
+      <ul class="mod-features">
+        <li>Nearest rider auto-assignment</li><li>Workload intelligent balancing</li>
+        <li>Multi-drop route planning</li><li>Zero-fatigue dispatching</li><li>Priority order escalation</li>
+      </ul>
+      <div class="mod-footer">
+        <div><div class="mod-conf" id="mc-conf-1">99.1%</div><div class="mod-conf-lbl">AI CONFIDENCE</div></div>
+        <div class="mini-bars" id="mc-bars-1"></div>
+      </div>
+    </div>
+
+    <div class="module-card mc-green" onclick="window.location.href='delay-shield.html'" style="cursor:pointer">
+      <div class="mod-icon">🛡️</div>
+      <div class="mod-head">
+        <div class="mod-name">DELAY SHIELD AI</div>
+        <div class="live-badge lb-g" style="padding:2px 8px;font-size:8px;display:inline-flex;align-items:center;gap:4px"><div class="status-dot dot-g" style="width:5px;height:5px"></div>MONITORING</div>
+      </div>
+      <div class="mod-role">FAILURE PREVENTION LAYER</div>
+      <ul class="mod-features">
+        <li>87% delay risk pre-detection</li><li>Pre-emptive rerouting engine</li>
+        <li>SLA breach prevention &lt;1.2s</li><li>Customer ETA auto-update</li><li>Zero-touch failure recovery</li>
+      </ul>
+      <div class="mod-footer">
+        <div><div class="mod-conf" id="mc-conf-2">98.6%</div><div class="mod-conf-lbl">AI CONFIDENCE</div></div>
+        <div class="mini-bars" id="mc-bars-2"></div>
+      </div>
+    </div>
+
+    <div class="module-card mc-orange" onclick="window.location.href='fuel-efficiency.html'" style="cursor:pointer">
+      <div class="mod-icon">⛽</div>
+      <div class="mod-head">
+        <div class="mod-name">FUEL EFFICIENCY AI</div>
+        <div class="live-badge" style="background:rgba(255,107,53,.1);color:rgb(var(--o));border:1px solid rgba(255,107,53,.35);padding:2px 8px;border-radius:20px;font-size:8px;font-family:'Share Tech Mono',monospace;display:inline-flex;align-items:center;gap:4px"><div class="status-dot dot-o" style="width:5px;height:5px"></div>OPTIMIZING</div>
+      </div>
+      <div class="mod-role">ECO-ROUTING OPTIMIZER</div>
+      <ul class="mod-features">
+        <li>Minimum fuel path computation</li><li>Inefficient driving detection</li>
+        <li>EV battery charge planning</li><li>18.3% fuel reduction achieved</li><li>CO₂ emission monitoring</li>
+      </ul>
+      <div class="mod-footer">
+        <div><div class="mod-conf" id="mc-conf-3">95.8%</div><div class="mod-conf-lbl">AI CONFIDENCE</div></div>
+        <div class="mini-bars" id="mc-bars-3"></div>
+      </div>
+    </div>
+
+    <div class="module-card mc-red" onclick="window.location.href='emergency-routing.html'" style="cursor:pointer">
+      <div class="mod-icon">🚨</div>
+      <div class="mod-head">
+        <div class="mod-name">EMERGENCY ROUTING AI</div>
+        <div class="live-badge" style="background:rgba(255,45,85,.1);color:rgb(var(--r));border:1px solid rgba(255,45,85,.35);padding:2px 8px;border-radius:20px;font-size:8px;font-family:'Share Tech Mono',monospace;display:inline-flex;align-items:center;gap:4px"><div class="status-dot dot-r" style="width:5px;height:5px"></div>STANDBY</div>
+      </div>
+      <div class="mod-role">CRISIS RESPONSE ENGINE</div>
+      <ul class="mod-features">
+        <li>Accident auto-detection &lt;0.4s</li><li>Blocked road instant bypass</li>
+        <li>31-rider mass rerouting</li><li>Emergency priority dispatch</li><li>Disaster logistics protocol</li>
+      </ul>
+      <div class="mod-footer">
+        <div><div class="mod-conf" id="mc-conf-4">99.9%</div><div class="mod-conf-lbl">AI CONFIDENCE</div></div>
+        <div class="mini-bars" id="mc-bars-4"></div>
+      </div>
+    </div>
+
+    <div class="module-card mc-purple" onclick="window.location.href='self-learning.html'" style="cursor:pointer">
+      <div class="mod-icon">🧠</div>
+      <div class="mod-head">
+        <div class="mod-name">SELF-LEARNING AI</div>
+        <div class="live-badge lb-p" style="padding:2px 8px;font-size:8px;display:inline-flex;align-items:center;gap:4px"><div class="status-dot dot-p" style="width:5px;height:5px"></div>LEARNING</div>
+      </div>
+      <div class="mod-role">NEURAL PATTERN ENGINE</div>
+      <ul class="mod-features">
+        <li>Traffic pattern memory bank</li><li>Rider performance profiling</li>
+        <li>City congestion behavior ML</li><li>24h algorithm self-rewriting</li><li>Optimization accuracy: 98.7%</li>
+      </ul>
+      <div class="mod-footer">
+        <div><div class="mod-conf" id="mc-conf-5">97.8%</div><div class="mod-conf-lbl">AI CONFIDENCE</div></div>
+        <div class="mini-bars" id="mc-bars-5"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- RIDER TRACKING -->
+<div class="section">
+  <p class="sec-tag">◈ DELIVERY PARTNER TRACKING</p>
+  <h2 class="sec-title">AI-Managed Rider Intelligence</h2>
+  <p class="sec-sub">Every rider monitored in real-time. GPS, fatigue, efficiency — all autonomous.</p>
+  <div class="riders-grid" id="riders-grid"></div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- PERFORMANCE ANALYTICS -->
+<div class="section">
+  <p class="sec-tag">◈ PERFORMANCE ANALYTICS</p>
+  <h2 class="sec-title">Live Optimization Dashboard</h2>
+  <p class="sec-sub">Every metric autonomously tracked, optimized, and improved by AI.</p>
+  <div class="analytics-grid">
+    <div class="ana-card ana-c"><div class="ana-icon">⚡</div><div class="ana-val" style="color:rgb(var(--c))" id="an-speed">312ms</div><div class="ana-lbl">ROUTE OPT SPEED</div><div class="ana-change">▼ −18ms vs last hr</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-speed"></canvas></div></div>
+    <div class="ana-card ana-g"><div class="ana-icon">🕐</div><div class="ana-val" style="color:rgb(var(--g))" id="an-time">22 min</div><div class="ana-lbl">AVG DELIVERY TIME</div><div class="ana-change">▼ −8 min vs humans</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-time"></canvas></div></div>
+    <div class="ana-card ana-p"><div class="ana-icon">📍</div><div class="ana-val" style="color:rgb(var(--p))" id="an-dist">41.6%</div><div class="ana-lbl">DISTANCE REDUCTION</div><div class="ana-change">▲ +1.3% this session</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-dist"></canvas></div></div>
+    <div class="ana-card ana-y"><div class="ana-icon">🤖</div><div class="ana-val" style="color:rgb(var(--y))" id="an-decisions">847</div><div class="ana-lbl">ROUTES OPTIMIZED/MIN</div><div class="ana-change">▲ trending up</div><div class="sparkline-wrap"><canvas class="sparkline" id="sp-decisions"></canvas></div></div>
+  </div>
+
+  <!-- GAUGES -->
+  <div class="gauges-panel">
+    <div class="sec-tag">◈ SYSTEM HEALTH MATRIX</div>
+    <div class="gauges-row">
+      <div class="gauge-wrap"><canvas id="g-uptime" width="80" height="80"></canvas><div class="gauge-lbl">UPTIME</div></div>
+      <div class="gauge-wrap"><canvas id="g-util" width="80" height="80"></canvas><div class="gauge-lbl">UTILIZATION</div></div>
+      <div class="gauge-wrap"><canvas id="g-accuracy" width="80" height="80"></canvas><div class="gauge-lbl">ACCURACY</div></div>
+      <div class="gauge-wrap"><canvas id="g-efficiency" width="80" height="80"></canvas><div class="gauge-lbl">EFFICIENCY</div></div>
+      <div class="gauge-wrap"><canvas id="g-security" width="80" height="80"></canvas><div class="gauge-lbl">SECURITY</div></div>
+      <div class="gauge-wrap"><canvas id="g-learning" width="80" height="80"></canvas><div class="gauge-lbl">LEARNING</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="glow-div"></div>
+
+<!-- SELF LEARNING -->
+<div class="section">
+  <p class="sec-tag">◈ AI SELF-LEARNING ENGINE</p>
+  <h2 class="sec-title">Neural Evolution Loop</h2>
+  <p class="sec-sub">The GTI Fleet AI continuously rewrites its own routing algorithms — improving accuracy every 24 hours.</p>
+  <div class="learn-grid">
+    <div class="learn-panel">
+      <div class="sec-tag" style="margin-bottom:16px">◈ LEARNING PROGRESS</div>
+      <div id="learn-bars"></div>
+    </div>
+    <div class="learn-panel">
+      <div class="sec-tag" style="margin-bottom:14px">◈ NEURAL EVOLUTION LOG</div>
+      <div class="learn-log" id="learn-log"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div id="footer">
+  <div class="footer-logo">🛸 GTI FLEET AI v3.7.2</div>
+  <div class="footer-sub">ROUTE OPTIMIZATION INTELLIGENCE · AUTONOMOUS · 24/7 · ZERO HUMAN DISPATCH</div>
+  <div class="footer-stats">
+    <div class="f-stat"><div class="status-dot dot-g"></div>UPTIME: 99.97%</div>
+    <div class="f-stat"><div class="status-dot dot-c"></div>DECISIONS TODAY: <span id="footer-dec">48,312</span></div>
+    <div class="f-stat"><div class="status-dot dot-p"></div>HUMAN DISPATCHERS: ZERO</div>
+    <div class="f-stat"><div class="status-dot dot-y"></div>ROUTES OPTIMIZED: ∞</div>
+  </div>
+</div>
+
+<script>
+// ─── CLOCK ──────────────────────────────────────────────────────────────────
+function tick(){document.getElementById('nav-clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});}
+setInterval(tick,1000);tick();
+
+// ─── NEURAL BACKGROUND CANVAS ───────────────────────────────────────────────
+(function(){
+  const cv=document.getElementById('neural-canvas');
+  const ctx=cv.getContext('2d');
+  let pts=[],W,H,animId;
+  function init(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;
+    pts=Array.from({length:55},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.4,a:Math.random()*.4+.1}));}
+  function draw(){ctx.clearRect(0,0,W,H);
+    pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<110){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(0,245,255,${.08*(1-d/110)})`;ctx.lineWidth=.5;ctx.stroke();}}));
+    pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(0,245,255,${p.a})`;ctx.fill();});
+    animId=requestAnimationFrame(draw);}
+  window.addEventListener('resize',init);init();draw();
+})();
+
+// ─── CITY MAP CANVAS ────────────────────────────────────────────────────────
+(function(){
+  const cv=document.getElementById('city-canvas');
+  const ctx=cv.getContext('2d');
+  const WAREHOUSES=[{x:.15,y:.22,n:'KGN-DARK'},{x:.76,y:.15,n:'IND-HUB'},{x:.50,y:.65,n:'KRM-STORE'},{x:.82,y:.72,n:'HSR-BASE'},{x:.30,y:.76,n:'WTF-NODE'}];
+  const HOTSPOTS=[{x:.35,y:.42,r:.1},{x:.62,y:.52,r:.08},{x:.22,y:.68,r:.06},{x:.70,y:.35,r:.07}];
+  const RIDER_COLORS=['rgba(0,245,255,1)','rgba(0,255,157,1)','rgba(255,210,0,1)','rgba(139,92,246,1)'];
+  let riders=[],W,H,frame=0,animId;
+
+  function initRiders(){
+    riders=Array.from({length:16},(_,i)=>({
+      id:String(i+1).padStart(2,'0'),x:Math.random(),y:Math.random(),
+      vx:(Math.random()-.5)*.003,vy:(Math.random()-.5)*.003,
+      target:Math.floor(Math.random()*5),pulseR:0,pulsing:false,
+      color:RIDER_COLORS[i%4]}));}
+
+  function resize(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight||380;initRiders();}
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // Grid
+    ctx.strokeStyle='rgba(0,245,255,.04)';ctx.lineWidth=1;
+    for(let i=0;i<=16;i++){ctx.beginPath();ctx.moveTo(i*W/16,0);ctx.lineTo(i*W/16,H);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*H/16);ctx.lineTo(W,i*H/16);ctx.stroke();}
+    // Hotspots
+    HOTSPOTS.forEach(h=>{
+      const g=ctx.createRadialGradient(h.x*W,h.y*H,0,h.x*W,h.y*H,h.r*Math.min(W,H));
+      g.addColorStop(0,'rgba(255,107,53,.22)');g.addColorStop(.5,'rgba(255,107,53,.08)');g.addColorStop(1,'rgba(255,107,53,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(h.x*W,h.y*H,h.r*Math.min(W,H),0,Math.PI*2);ctx.fill();
+      ctx.font="9px 'Share Tech Mono',monospace";ctx.fillStyle='rgba(255,107,53,.65)';ctx.textAlign='center';
+      ctx.fillText('SURGE',h.x*W,h.y*H-h.r*Math.min(W,H)*.6);});
+    // Route lines
+    riders.forEach(r=>{
+      const t=WAREHOUSES[r.target];
+      const mx=(r.x+t.x)/2*W+Math.sin(frame*.01+r.id*.7)*18;
+      const my=(r.y+t.y)/2*H-28;
+      ctx.beginPath();ctx.moveTo(r.x*W,r.y*H);ctx.quadraticCurveTo(mx,my,t.x*W,t.y*H);
+      ctx.strokeStyle=r.color.replace('1)','0.15)');ctx.lineWidth=1;ctx.setLineDash([4,5]);ctx.stroke();ctx.setLineDash([]);});
+    // Warehouses
+    const t2=Date.now()/1000;
+    WAREHOUSES.forEach(w=>{
+      const x=w.x*W,y=w.y*H,pulse=Math.sin(t2*2+w.x*10)*.3+.7;
+      ctx.fillStyle='rgba(255,210,0,.08)';ctx.strokeStyle=`rgba(255,210,0,${pulse*.9})`;ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.rect(x-10,y-10,20,20);ctx.fill();ctx.stroke();
+      ctx.strokeStyle=`rgba(255,210,0,${.25*pulse})`;ctx.lineWidth=.8;
+      ctx.beginPath();ctx.arc(x,y,18+4*Math.sin(t2*2),0,Math.PI*2);ctx.stroke();
+      ctx.beginPath();ctx.arc(x,y,30+6*Math.sin(t2*1.5),0,Math.PI*2);ctx.stroke();
+      ctx.fillStyle='rgba(255,210,0,1)';ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill();
+      ctx.font="8px 'Share Tech Mono',monospace";ctx.fillStyle='rgba(255,210,0,.65)';ctx.textAlign='center';ctx.fillText(w.n,x,y+28);});
+    // Riders
+    riders.forEach(r=>{
+      const t=WAREHOUSES[r.target];
+      r.vx+=(t.x-r.x)*.0008+(Math.random()-.5)*.004;r.vy+=(t.y-r.y)*.0008+(Math.random()-.5)*.004;
+      r.vx=Math.max(-.006,Math.min(.006,r.vx));r.vy=Math.max(-.006,Math.min(.006,r.vy));
+      r.x=Math.max(.03,Math.min(.97,r.x+r.vx));r.y=Math.max(.03,Math.min(.97,r.y+r.vy));
+      if(Math.abs(r.x-t.x)<.025&&Math.abs(r.y-t.y)<.025){r.target=Math.floor(Math.random()*5);r.pulseR=0;r.pulsing=true;}
+      if(r.pulsing){r.pulseR+=1.2;if(r.pulseR>22)r.pulsing=false;}
+      const x=r.x*W,y=r.y*H;
+      if(r.pulsing){ctx.beginPath();ctx.arc(x,y,r.pulseR,0,Math.PI*2);ctx.strokeStyle=r.color.replace('1)',`${Math.max(0,1-r.pulseR/22)})`) ;ctx.lineWidth=1.5;ctx.stroke();}
+      ctx.beginPath();ctx.arc(x,y,12,0,Math.PI*2);ctx.strokeStyle=r.color.replace('1)','0.18)');ctx.lineWidth=1;ctx.stroke();
+      ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fillStyle=r.color.replace('1)','0.25)');ctx.fill();
+      ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fillStyle=r.color;ctx.fill();
+      ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+      ctx.font="8px 'Share Tech Mono',monospace";ctx.fillStyle=r.color.replace('1)','.65)');ctx.textAlign='center';ctx.fillText('R'+r.id,x,y-15);});
+    frame++;animId=requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+  // Flash messages
+  const FLASHES=['AI rerouting — traffic detected','New optimal path generated','Delay shield activated','Traffic anomaly resolved','Route optimized in 312ms','Emergency reroute applied','Surge zone detected — rerouting','Multi-drop plan recalculated'];
+  const fl=document.getElementById('flash-label');
+  setInterval(()=>{
+    fl.textContent='⬡ '+FLASHES[Math.floor(Math.random()*FLASHES.length)].toUpperCase()+' ⬡';
+    fl.style.display='block';fl.style.animation='none';void fl.offsetWidth;fl.style.animation='slidedown .3s ease';
+    setTimeout(()=>{fl.style.display='none';},2500);},5000);
+})();
+
+// ─── LIVE TERMINAL ───────────────────────────────────────────────────────────
+(function(){
+  const LOGS=[
+    {src:'[GTI FLEET AI]',cls:'log-c',msgs:['→ Incoming order #44892 — Koramangala Sector 5','→ Analyzing 23 nearby riders within 2.4km radius','→ Rider R-47 selected — ETA 6.2 min, efficiency 94%','→ Route optimized in 312ms — 3.4km saved','→ Live traffic anomaly detected — MG Road congestion','→ Alternate path computed — Residency Rd bypass','→ Delivery ETA reduced by 14 minutes automatically','→ Multi-drop optimization for Rider R-12 — 5 orders','→ Fuel efficiency improved 12% this hour','→ 847 concurrent routes recalculated successfully']},
+    {src:'[TRAFFIC AI]',cls:'log-y',msgs:['→ Surge detected — Indiranagar corridor +340% density','→ ORR Bangalore — congestion score 8.7/10','→ Predictive model: Silk Board peak in 22 minutes','→ 156 riders proactively rerouted, saving 2.1hrs total','→ Weather event: rain — route friction +18%']},
+    {src:'[DISPATCH AI]',cls:'log-p',msgs:['→ Rider R-03 — fatigue score 74%, workload balanced','→ Auto-assigning backup rider for zone KGN-7','→ Fleet utilization: 94.2% — optimal range confirmed','→ Emergency dispatch: perishable order — priority 1','→ Workload rebalancing complete — 6 zones normalized']},
+    {src:'[DELAY SHIELD]',cls:'log-g',msgs:['→ Risk detected: order #44871 — 87% delay probability','→ Pre-emptive reroute applied — risk nullified','→ 14 potential failures prevented in last 60 seconds','→ ETA variance reduced to ±1.2 minutes system-wide','→ Zero failed deliveries in last 4.2 hours']},
+    {src:'[FUEL AI]',cls:'log-o',msgs:['→ Suboptimal path detected — Rider R-09 corrected','→ Fuel savings this hour: ₹2,847','→ Eco-route applied to 34 riders simultaneously','→ Carbon reduction: 18.4kg CO₂ avoided today']},
+    {src:'[EMERGENCY]',cls:'log-r',msgs:['→ ⚠ Road block detected — Hosur Rd km 14','→ Emergency reroute activated — 31 riders affected','→ All riders rerouted in 0.8 seconds','→ ⚠ Accident detected — HSR Layout junction','→ AI incident closed in 1.4s — zero failures']},
+  ];
+  const body=document.getElementById('term-body');
+  let logId=0;
+  function addLog(){
+    const e=LOGS[Math.floor(Math.random()*LOGS.length)];
+    const msg=e.msgs[Math.floor(Math.random()*e.msgs.length)];
+    const time=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const line=document.createElement('div');line.className='log-line';
+    line.innerHTML=`<span class="log-time">[${time}]</span><span class="${e.cls}" style="font-weight:600">${e.src}</span><span class="log-msg"> ${msg}</span>`;
+    body.insertBefore(line,body.lastElementChild);
+    if(body.children.length>62)body.removeChild(body.firstChild);
+    body.scrollTop=body.scrollHeight;logId++;}
+  for(let i=0;i<10;i++)addLog();
+  const cur=document.createElement('div');cur.className='log-line';
+  cur.innerHTML='<span class="log-c">▸</span><span class="cursor-blink"></span>';
+  body.appendChild(cur);
+  setInterval(addLog,950);
+})();
+
+// ─── MINI BAR CHARTS (module cards) ─────────────────────────────────────────
+const MODULE_COLORS=['rgb(255,210,0)','rgb(0,245,255)','rgb(0,255,157)','rgb(255,107,53)','rgb(255,45,85)','rgb(139,92,246)'];
+function makeBars(id,color){
+  const wrap=document.getElementById(id);if(!wrap)return;
+  wrap.innerHTML='';
+  Array.from({length:8},()=>Math.random()*60+40).forEach(v=>{
+    const b=document.createElement('div');b.className='mini-bar';
+    b.style.height=(v*.36)+'px';b.style.background=color;wrap.appendChild(b);});}
+for(let i=0;i<6;i++)makeBars('mc-bars-'+i,MODULE_COLORS[i]);
+setInterval(()=>{for(let i=0;i<6;i++)makeBars('mc-bars-'+i,MODULE_COLORS[i]);},1700);
+
+// ─── CONFIDENCE NUMBERS ───────────────────────────────────────────────────────
+const CONF_BASE=[97.3,99.1,98.6,95.8,99.9,97.8];
+setInterval(()=>{CONF_BASE.forEach((b,i)=>{
+  const el=document.getElementById('mc-conf-'+i);if(el){
+    const v=Math.max(85,Math.min(99.9,b+(Math.random()-.5)*1.4));
+    el.textContent=v.toFixed(1)+'%';}});},1900);
+
+// ─── HERO METRICS ────────────────────────────────────────────────────────────
+let hm={routes:847,speed:312,cong:6.4,fuel:18.3,util:94.2,dist:41.6};
+setInterval(()=>{
+  hm.routes=Math.round(hm.routes+(Math.random()-.5)*30);
+  hm.speed=Math.round(hm.speed+(Math.random()-.5)*20);
+  hm.cong=Math.max(3,Math.min(9.9,+(hm.cong+(Math.random()-.5)*.3).toFixed(1)));
+  hm.fuel=+(hm.fuel+(Math.random()-.5)*.5).toFixed(1);
+  hm.util=+(hm.util+(Math.random()-.5)*.8).toFixed(1);
+  hm.dist=+(hm.dist+(Math.random()-.5)*.4).toFixed(1);
+  document.getElementById('hm-routes').textContent=hm.routes;
+  document.getElementById('hm-speed').textContent=hm.speed+'ms';
+  document.getElementById('hm-cong').textContent=hm.cong+'/10';
+  document.getElementById('hm-fuel').textContent='+'+hm.fuel+'%';
+  document.getElementById('hm-util').textContent=hm.util+'%';
+  document.getElementById('hm-dist').textContent=hm.dist+'%';},1900);
+
+// ─── DECISION COUNTER ─────────────────────────────────────────────────────────
+let decCount=48312;
+setInterval(()=>{decCount+=Math.floor(Math.random()*22+8);
+  ['dec-counter','footer-dec'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=decCount.toLocaleString();});},1200);
+
+// ─── RIDERS ───────────────────────────────────────────────────────────────────
+(function(){
+  const NAMES=['Arjun Kumar','Priya Singh','Dev Reddy','Kavya Nair','Rahul Das','Sneha Iyer','Amit Sharma','Pooja Verma'];
+  const STATUSES=['DELIVERING','REROUTING','DELIVERING','DELIVERING','IDLE','DELIVERING','DELIVERING','REROUTING'];
+  const STATUS_COLORS={DELIVERING:'rgb(0,255,157)',REROUTING:'rgb(255,210,0)',IDLE:'rgb(0,245,255)'};
+  const grid=document.getElementById('riders-grid');
+  const riderData=Array.from({length:8},(_,i)=>({
+    id:String(i+1).padStart(2,'0'),name:NAMES[i],
+    speed:Math.floor(Math.random()*15+22),efficiency:Math.floor(Math.random()*15+80),
+    deliveries:Math.floor(Math.random()*8+2),gps:Math.floor(Math.random()*5+95),
+    fatigue:Math.floor(Math.random()*40+20),routeScore:Math.floor(Math.random()*10+88),
+    status:STATUSES[i]}));
+  riderData.forEach(r=>{
+    const sc=STATUS_COLORS[r.status];
+    const fatCol=r.fatigue>70?'rgb(255,45,85)':'rgb(0,255,157)';
+    const card=document.createElement('div');card.className='rider-card';
+    card.innerHTML=`
+      <div class="rc-top" style="background:linear-gradient(90deg,transparent,${sc},transparent)"></div>
+      <div class="rider-head">
+        <div class="rider-id">R-${r.id}</div>
+        <div class="rider-status" style="background:${sc}18;color:${sc};border:1px solid ${sc}35">
+          <div class="status-dot" style="width:5px;height:5px;background:${sc};box-shadow:0 0 6px ${sc};animation:pulse-dot 1.4s ease-in-out infinite"></div>${r.status}
+        </div>
+      </div>
+      <div class="rider-name">${r.name}</div>
+      <div class="rider-row"><span class="rider-row-lbl">SPEED</span><span class="rider-row-val" style="color:rgb(0,245,255)">${r.speed} km/h</span></div>
+      <div class="rider-row"><span class="rider-row-lbl">EFFICIENCY</span><span class="rider-row-val" style="color:rgb(0,255,157)">${r.efficiency}%</span></div>
+      <div class="rider-row"><span class="rider-row-lbl">DELIVERIES</span><span class="rider-row-val" style="color:rgb(139,92,246)">${r.deliveries}</span></div>
+      <div class="rider-row"><span class="rider-row-lbl">GPS SIGNAL</span><span class="rider-row-val" style="color:rgb(255,210,0)">${r.gps}%</span></div>
+      <div class="rider-row"><span class="rider-row-lbl">FATIGUE</span><span class="rider-row-val" style="color:${fatCol}">${r.fatigue}%</span></div>
+      <div class="rider-row"><span class="rider-row-lbl">ROUTE SCORE</span><span class="rider-row-val" style="color:rgb(0,245,255)">${r.routeScore}%</span></div>
+      <div class="rider-bar"><div class="rider-bar-fill" style="width:${r.efficiency}%"></div></div>`;
+    grid.appendChild(card);});
+})();
+
+// ─── SPARKLINES ───────────────────────────────────────────────────────────────
+const SPARK_COLORS={'sp-speed':'rgb(0,245,255)','sp-time':'rgb(0,255,157)','sp-dist':'rgb(139,92,246)','sp-decisions':'rgb(255,210,0)'};
+const sparkData={};
+Object.keys(SPARK_COLORS).forEach(id=>{sparkData[id]=Array.from({length:20},()=>Math.random()*40+60);});
+function drawSparklines(){
+  Object.entries(SPARK_COLORS).forEach(([id,col])=>{
+    const cv=document.getElementById(id);if(!cv)return;
+    const ctx=cv.getContext('2d');
+    const W=cv.width=cv.offsetWidth||140,H=cv.height=cv.offsetHeight||32;
+    ctx.clearRect(0,0,W,H);
+    const data=sparkData[id],mn=Math.min(...data),mx=Math.max(...data),step=W/(data.length-1);
+    ctx.beginPath();
+    data.forEach((v,i)=>{const x=i*step,y=H-(v-mn)/(mx-mn||1)*(H*.72)-(H*.14);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.stroke();
+    ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+    const g=ctx.createLinearGradient(0,0,0,H);
+    const rgba=col.replace('rgb(','rgba(').replace(')',',');
+    g.addColorStop(0,rgba+'0.25)');g.addColorStop(1,rgba+'0)');
+    ctx.fillStyle=g;ctx.fill();});}
+setInterval(()=>{Object.keys(sparkData).forEach(id=>{sparkData[id].shift();sparkData[id].push(Math.random()*40+60);});drawSparklines();},1500);
+setTimeout(drawSparklines,200);
+
+// ─── ANALYTICS VALUES ─────────────────────────────────────────────────────────
+setInterval(()=>{
+  document.getElementById('an-speed').textContent=Math.round(280+Math.random()*80)+'ms';
+  document.getElementById('an-decisions').textContent=Math.round(800+Math.random()*150);},1900);
+
+// ─── CIRCULAR GAUGES ─────────────────────────────────────────────────────────
+const GAUGES=[
+  {id:'g-uptime',val:99,color:'rgb(0,255,157)'},
+  {id:'g-util',val:94,color:'rgb(0,245,255)'},
+  {id:'g-accuracy',val:97,color:'rgb(139,92,246)'},
+  {id:'g-efficiency',val:87,color:'rgb(255,210,0)'},
+  {id:'g-security',val:100,color:'rgb(255,45,85)'},
+  {id:'g-learning',val:92,color:'rgb(255,107,53)'},
+];
+function drawGauge(id,val,color){
+  const cv=document.getElementById(id);if(!cv)return;
+  const ctx=cv.getContext('2d');const W=80,H=80,cx=40,cy=40,r=32;
+  ctx.clearRect(0,0,W,H);
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=6;ctx.stroke();
+  const pct=val/100,start=-Math.PI/2,end=start+pct*Math.PI*2;
+  ctx.beginPath();ctx.arc(cx,cy,r,start,end);ctx.strokeStyle=color;ctx.lineWidth=6;ctx.lineCap='round';
+  ctx.shadowColor=color;ctx.shadowBlur=10;ctx.stroke();ctx.shadowBlur=0;
+  ctx.font="bold 13px 'Orbitron',monospace";ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(val+'%',cx,cy);}
+GAUGES.forEach(g=>drawGauge(g.id,g.val,g.color));
+setInterval(()=>{GAUGES.forEach(g=>{g.val=Math.max(80,Math.min(100,Math.round(g.val+(Math.random()-.5)*2)));drawGauge(g.id,g.val,g.color);});},2200);
+
+// ─── SELF-LEARNING BARS ───────────────────────────────────────────────────────
+(function(){
+  const BARS=[
+    {label:'Traffic Pattern Memory',pct:94,color:'rgb(255,210,0)'},
+    {label:'Rider Performance Profiling',pct:88,color:'rgb(0,245,255)'},
+    {label:'City Congestion Modeling',pct:97,color:'rgb(0,255,157)'},
+    {label:'Delivery Timing Optimization',pct:91,color:'rgb(139,92,246)'},
+    {label:'Algorithm Self-Rewriting',pct:78,color:'rgb(255,107,53)'},
+  ];
+  const wrap=document.getElementById('learn-bars');
+  BARS.forEach(b=>{
+    const div=document.createElement('div');div.className='learn-bar-wrap';
+    div.innerHTML=`
+      <div class="learn-bar-head">
+        <span class="learn-bar-lbl">${b.label}</span>
+        <span class="learn-bar-val" style="color:${b.color};font-family:'Orbitron',monospace;font-size:10px">${b.pct}%</span>
+      </div>
+      <div class="learn-bar-track"><div class="learn-bar-fill" style="width:${b.pct}%;background:linear-gradient(90deg,${b.color},${b.color}88);box-shadow:0 0 8px ${b.color}60"></div></div>`;
+    wrap.appendChild(div);});
+
+  const LOG_ENTRIES=[
+    {t:'00:02',m:'New traffic cluster detected — Silk Board junction',c:'rgb(255,210,0)'},
+    {t:'00:08',m:'Optimization accuracy improved to 98.7%',c:'rgb(0,255,157)'},
+    {t:'00:15',m:'Rider R-07 pattern indexed — efficiency: 94%',c:'rgb(0,245,255)'},
+    {t:'00:23',m:'Weekend surge model updated — Koramangala +34%',c:'rgb(139,92,246)'},
+    {t:'00:31',m:'Algorithm v3.7.2 deployed — 1.8% improvement',c:'rgb(0,255,157)'},
+    {t:'00:44',m:'Rain friction model retrained — 1.2k data points',c:'rgb(255,107,53)'},
+    {t:'00:58',m:'City behavior delta detected — 6 zones updated',c:'rgb(255,210,0)'},
+    {t:'01:12',m:'Neural weights rebalanced — 47M parameters',c:'rgb(139,92,246)'},
+    {t:'01:29',m:'EV charging pattern learned — 3 dark stores',c:'rgb(0,245,255)'},
+    {t:'01:47',m:'Emergency routing response improved to 0.8s',c:'rgb(255,45,85)'},
+    {t:'02:03',m:'Predictive delay model retrained — 98.4% accuracy',c:'rgb(0,255,157)'},
+    {t:'02:21',m:'New optimal zone boundaries computed',c:'rgb(255,210,0)'},
+  ];
+  const logWrap=document.getElementById('learn-log');
+  LOG_ENTRIES.forEach(l=>{
+    const div=document.createElement('div');div.className='llog-line';
+    div.innerHTML=`<span class="llog-time">[${l.t}]</span><span style="color:${l.c}">→</span><span style="color:rgba(255,255,255,.55);margin-left:6px">${l.m}</span>`;
+    logWrap.appendChild(div);});
+  // Add live entries
+  const LIVE_MSGS=[
+    {m:'Route efficiency gain detected — zone HSR +2.1%',c:'rgb(0,255,157)'},
+    {m:'New congestion hotspot mapped — Sarjapur Rd',c:'rgb(255,210,0)'},
+    {m:'Rider R-14 efficiency profiled — 91% score',c:'rgb(0,245,255)'},
+    {m:'Algorithm delta applied — 0.3% accuracy gain',c:'rgb(139,92,246)'},
+    {m:'Dark store demand model updated — KGN zone',c:'rgb(255,107,53)'},
+  ];
+  setInterval(()=>{
+    const l=LIVE_MSGS[Math.floor(Math.random()*LIVE_MSGS.length)];
+    const t=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'});
+    const div=document.createElement('div');div.className='llog-line';div.style.animation='fadein .3s ease';
+    div.innerHTML=`<span class="llog-time">[${t}]</span><span style="color:${l.c}">→</span><span style="color:rgba(255,255,255,.55);margin-left:6px">${l.m}</span>`;
+    logWrap.appendChild(div);logWrap.scrollTop=logWrap.scrollHeight;},4000);
+})();
+</script>
+</body>
+</html>
